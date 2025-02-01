@@ -1,5 +1,3 @@
-#include <stdint.h>
-#include <cmath>
 #include "fwwasm.h"
 
 volatile uint8_t exitApp = 0;
@@ -14,19 +12,24 @@ volatile uint8_t exitApp = 0;
 // Process Accelerometer Data
 void processAccelData(uint8_t *event_data) {
     int16_t iX, iY, iZ;
+    float scaleFactor = 32768.0f / 2.0f; // ±2g
 
     iX = static_cast<int16_t>(event_data[0] | event_data[1] << 8);
     iY = static_cast<int16_t>(event_data[2] | event_data[3] << 8);
     iZ = static_cast<int16_t>(event_data[4] | event_data[5] << 8);
 
-    // Compute roll (Pitch Bend)
-    double roll = atan2(iY, iZ) * 180.0 / M_PI;
+    float x = static_cast<float>(iX) / scaleFactor;
+    float y = static_cast<float>(iY) / scaleFactor;
+    float z = static_cast<float>(iZ) / scaleFactor;
+
+    // Compute roll (pitch bend)
+    double roll = atan2(y, z) * 180.0 / M_PI;
     if (roll < -90) {
         roll += 360;
     }
 
-    // Compute pitch (Velocity)
-    double pitch = atan2(-iX, sqrt(iY * iY + iZ * iZ)) * 180.0 / M_PI;
+    // Compute pitch (velocity)
+    double pitch = atan2(-x, sqrt(y * y + z * z)) * 180.0 / M_PI;
     pitch = fabs(pitch);
     if (pitch > 90) pitch = 90;
 
@@ -36,7 +39,7 @@ void processAccelData(uint8_t *event_data) {
     double velocity = 127 * (1 - (pitch / 90.0));
 
     // Debug Output
-    printFloat("MIDI Cents: %d\n", printOutColor::printColorBlack, static_cast<float>(midiCents));
+    printFloat("1: %d\n", printOutColor::printColorBlack, static_cast<float>(midiCents));
     printFloat("MIDI Velocity: %d\n", printOutColor::printColorBlack, static_cast<float>(velocity));
 }
 
