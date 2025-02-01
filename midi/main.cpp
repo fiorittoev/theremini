@@ -38,8 +38,8 @@ void processAccelData(uint8_t *event_data) {
     double velocity = 127 * (1 - (pitch / 90.0));
 
     // Debug Output
-    printFloat("Pitch: %.1f ", printOutColor::printColorBlack, static_cast<float>(midiCents));
-    printFloat("Velocity: %.1f\n", printOutColor::printColorBlack, static_cast<float>(velocity));
+    printFloat("%.1f ", printOutColor::printColorBlack, static_cast<float>(midiCents));
+    printFloat("%.1f\n", printOutColor::printColorBlack, static_cast<float>(velocity));
 }
 
 
