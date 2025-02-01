@@ -3,6 +3,7 @@ import time
 from typing import Optional, Tuple
 import serial
 import rtmidi
+import re
 
 
 class MidiController:
