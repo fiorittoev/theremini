@@ -105,20 +105,28 @@ class MidiController:
                         if raw_data:
                             try:
                                 # Clean the data by removing any unwanted characters (like '0134')
-                                cleaned_data = ''.join(c for c in raw_data if c.isdigit() or c in '.-' or c.isspace())
-                                
+                                raw_data = "".join(
+                                    e
+                                    for e in raw_data
+                                    if e.isdigit() or e.isspace() or e == "."
+                                )
+                                print(raw_data)
                                 # Split the string into cents and volume
-                                parts = cleaned_data.split()
+                                parts = raw_data.split()
                                 if len(parts) >= 2:  # Ensure we have both values
                                     cents = float(parts[0])
                                     volume = float(parts[1])
-                                    
+
                                     # Process the values
                                     self.current_cents = max(-1200, min(1200, cents))
-                                    self.current_volume = max(0.0, min(1.0, volume/127.0))  # Assuming volume is 0-127
+                                    self.current_volume = max(
+                                        0.0, min(1.0, volume / 127.0)
+                                    )  # Assuming volume is 0-127
                                     self.send_midi_messages()
                                 else:
-                                    print(f"Invalid data format - expected two values, got: {raw_data}")
+                                    print(
+                                        f"Invalid data format - expected two values, got: {raw_data}"
+                                    )
 
                             except ValueError as e:
                                 print(f"Could not parse values from '{raw_data}': {e}")
