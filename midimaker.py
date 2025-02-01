@@ -94,8 +94,12 @@ class MidiController:
         pitch_bend = int(8192 + (normalized * 8192))
         return max(0, min(16383, pitch_bend))
 
-    def process_serial_data(self, baudrate: int = 9600, timeout: int = 1):
+    def strip_ansi_codes(self, text: str) -> str:
+        """Remove ANSI escape codes from text."""
+        ansi_escape = re.compile(r'\x1B(?:[@-Z\\-_]|\[[0-?]*[ -/]*[@-~])')
+        return ansi_escape.sub('', text)
     
+    def process_serial_data(self, baudrate: int = 9600, timeout: int = 1):
         try:
             with serial.Serial(self.serial_port, baudrate, timeout=timeout) as ser:
                 print(f"Connected to serial port: {self.serial_port}")
@@ -105,31 +109,24 @@ class MidiController:
                         raw_data = ser.readline().decode("utf-8").strip()
                         if raw_data:
                             try:
-                                # Remove the '0134' or '134' prefix and find the second occurrence
+                                # Remove the '0134' or '134' prefix
                                 data = raw_data.replace('0134', '').replace('134', '')
                                 
-                                # Find the position of the second number by looking for a digit after the first decimal point
-                                first_decimal = data.find('.')
-                                if first_decimal != -1:
-                                    second_start = first_decimal + 1
-                                    while second_start < len(data) and (data[second_start].isdigit() or data[second_start] == '-'):
-                                        second_start += 1
+                                # Strip ANSI escape codes
+                                data = self.strip_ansi_codes(data)
+                                
+                                # Split the string on whitespace
+                                parts = data.split()
+                                if len(parts) >= 2:
+                                    cents = float(parts[0])
+                                    volume = float(parts[1])
                                     
-                                    if second_start < len(data):
-                                        # Split into two values
-                                        cents_str = data[:second_start]
-                                        volume_str = data[second_start:]
-                                        
-                                        # Convert to float
-                                        cents = float(cents_str)
-                                        volume = float(volume_str)
-                                        
-                                        # Process the values
-                                        self.current_cents = max(-1200, min(1200, cents))
-                                        self.current_volume = max(0.0, min(1.0, volume/127.0))
-                                        self.send_midi_messages()
+                                    # Process the values
+                                    self.current_cents = max(-1200, min(1200, cents))
+                                    self.current_volume = max(0.0, min(1.0, volume/127.0))
+                                    self.send_midi_messages()
                                 else:
-                                    print(f"No decimal point found in data: {raw_data}")
+                                    print(f"Invalid data format (not enough values): {raw_data}")
 
                             except ValueError as e:
                                 print(f"Could not parse values from '{raw_data}' -> '{data}': {e}")
