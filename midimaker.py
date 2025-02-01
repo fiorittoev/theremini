@@ -156,7 +156,9 @@ class MidiController:
             print(f"Serial port error: {e}")
         finally:
             if self.last_note is not None:
-                self.midi_out.sendMessage([0x80 | self.midi_channel, self.last_note, 0])
+                self.midi_out.sendMessage(
+                    [int(0x80 | self.midi_channel), int(self.last_note), 0]
+                )
             self.midi_out.closePort()
 
 
