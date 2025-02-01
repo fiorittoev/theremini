@@ -1,0 +1,1 @@
+/opt/wasi-sdk/share/cmake/../..//bin/clang++ --target=wasm32-wasi -Wl,--no-entry -Wl,--export-all -Wl,--lto-O3 -Wl,-z,stack-size=61440 -Wl,--initial-heap=0 -Wl,--max-memory=131072 -Wl,--initial-memory=65536 -Wl,--stack-first -Wl,--strip-all CMakeFiles/midi_controller.dir/main.cpp.obj -o midi_controller.wasm 
