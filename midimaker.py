@@ -22,20 +22,18 @@ class MidiController:
 
         # MIDI setup with loopMIDI support
         self.midi_channel = midi_channel
-        self.midi_out = rtmidi.RtMidiOut()  # Changed from RtMidiOut to MidiOut
+        self.midi_out = rtmidi.RtMidiOut()
 
         # Find and connect to loopMIDI port
         port_number = self.find_loopmidi_port()
         if port_number is not None:
-            self.midi_out.open_port(port_number)  # Changed from openPort to open_port
+            self.midi_out.openPort(port_number)
             print(
-                f"Connected to loopMIDI port: {self.midi_out.get_port_name(port_number)}"  # Changed from getPortName to get_port_name
+                f"Connected to loopMIDI port: {self.midi_out.getPortName(port_number)}"
             )
         else:
             print("No loopMIDI port found! Creating one...")
-            self.midi_out.open_virtual_port(
-                "FreeWilly MIDI"
-            )  # Changed from openVirtualPort to open_virtual_port
+            self.midi_out.openVirtualPort("FreeWilly MIDI")
             print("Created virtual MIDI port: FreeWilly MIDI")
 
         # Serial setup
@@ -45,14 +43,10 @@ class MidiController:
 
     def find_loopmidi_port(self) -> Optional[int]:
         """Find the first available loopMIDI port."""
-        ports = (
-            self.midi_out.get_port_count()
-        )  # Changed from getPortCount to get_port_count
+        ports = self.midi_out.getPortCount()
         print("\nAvailable MIDI ports:")
         for i in range(ports):
-            port_name = self.midi_out.get_port_name(
-                i
-            )  # Changed from getPortName to get_port_name
+            port_name = self.midi_out.getPortName(i)
             print(f"  {i}: {port_name}")
             # Look for typical loopMIDI port names
             if "loop" in port_name.lower() or "virtual" in port_name.lower():
@@ -72,30 +66,39 @@ class MidiController:
         # Send pitch bend
         msb = (pitch_bend >> 7) & 0x7F
         lsb = pitch_bend & 0x7F
-        self.midi_out.send_message(
-            [0xE0 | self.midi_channel, lsb, msb]
-        )  # Changed from sendMessage to send_message
+        self.midi_out.sendMessage([0xE0 | self.midi_channel, lsb, msb])
 
         # Handle note changes
         if self.last_note != note:
             if self.last_note is not None:
                 # Send note off for previous note
-                self.midi_out.send_message(
-                    [0x80 | self.midi_channel, self.last_note, 0]
-                )  # Changed from sendMessage to send_message
+                self.midi_out.sendMessage([0x80 | self.midi_channel, self.last_note, 0])
 
             # Send note on for new note
-            self.midi_out.send_message(
-                [0x90 | self.midi_channel, note, velocity]
-            )  # Changed from sendMessage to send_message
+            self.midi_out.sendMessage([0x90 | self.midi_channel, note, velocity])
             self.last_note = note
         else:
             # Update velocity if note hasn't changed
-            self.midi_out.send_message(
-                [0x90 | self.midi_channel, note, velocity]
-            )  # Changed from sendMessage to send_message
+            self.midi_out.sendMessage([0x90 | self.midi_channel, note, velocity])
 
-    # ... rest of the methods remain the same ...
+    def cents_to_midi_note(self, cents: float) -> Tuple[int, float]:
+        """Convert cents to MIDI note number and remaining cents for pitch bend."""
+        semitones = cents / 100.0
+        whole_semitones = int(math.floor(semitones))
+        remaining_cents = (semitones - whole_semitones) * 100
+        midi_note = 60 + whole_semitones  # Middle C (60) as base note
+        return midi_note, remaining_cents
+
+    def cents_to_pitch_bend(self, cents: float) -> int:
+        """Convert cents to MIDI pitch bend value (0-16383)."""
+        normalized = (cents / 100.0) / 2.0  # +/-1 semitone range
+        pitch_bend = int(8192 + (normalized * 8192))
+        return max(0, min(16383, pitch_bend))
+
+    def strip_ansi_codes(self, text: str) -> str:
+        """Remove ANSI escape codes from text."""
+        ansi_escape = re.compile(r"\x1B(?:[@-Z\\-_]|\[[0-?]*[ -/]*[@-~])")
+        return ansi_escape.sub("", text)
 
     def process_serial_data(self, baudrate: int = 9600, timeout: int = 1):
         try:
@@ -147,10 +150,8 @@ class MidiController:
             print(f"Serial port error: {e}")
         finally:
             if self.last_note is not None:
-                self.midi_out.send_message(
-                    [0x80 | self.midi_channel, self.last_note, 0]
-                )  # Changed from sendMessage to send_message
-            self.midi_out.close_port()  # Changed from closePort to close_port
+                self.midi_out.sendMessage([0x80 | self.midi_channel, self.last_note, 0])
+            self.midi_out.closePort()
 
 
 def main():
