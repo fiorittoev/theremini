@@ -43,7 +43,7 @@ void processAccelData(uint8_t *event_data) {
 }
 
 
-void loop()
+void loop(
 {
 
     uint8_t event_data[FW_GET_EVENT_DATA_MAX] = {0};
