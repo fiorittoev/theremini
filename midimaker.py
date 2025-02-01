@@ -95,7 +95,6 @@ class MidiController:
         return max(0, min(16383, pitch_bend))
 
     def process_serial_data(self, baudrate: int = 9600, timeout: int = 1):
-        """Process incoming serial data from Free Willy."""
         try:
             with serial.Serial(self.serial_port, baudrate, timeout=timeout) as ser:
                 print(f"Connected to serial port: {self.serial_port}")
@@ -103,18 +102,27 @@ class MidiController:
                 line_counter = 0
                 while self.powered:
                     try:
-                        data = ser.readline().decode("utf-8").strip()
-                        if data:
-                            value = float(data)
+                        raw_data = ser.readline().decode("utf-8").strip()
+                        if raw_data:
+                            # Convert string to float, handling potential formatting issues
+                            try:
+                                # Handle common number formats and remove any non-numeric characters
+                                # except decimal point and minus sign
+                                cleaned_data = ''.join(c for c in raw_data if c.isdigit() or c in '.-')
+                                value = float(cleaned_data)
 
-                            # Alternate between processing pitch and volume
-                            if line_counter % 2 == 0:
-                                self.current_cents = max(-1200, min(1200, value))
-                            else:
-                                self.current_volume = max(0.0, min(1.0, value))
-                                self.send_midi_messages()
+                                # Alternate between processing pitch and volume
+                                if line_counter % 2 == 0:
+                                    self.current_cents = max(-1200, min(1200, value))
+                                else:
+                                    self.current_volume = max(0.0, min(1.0, value))
+                                    self.send_midi_messages()
 
-                            line_counter += 1
+                                line_counter += 1
+
+                            except ValueError as e:
+                                print(f"Could not convert '{raw_data}' to float: {e}")
+                                continue
 
                     except ValueError as e:
                         print(f"Invalid data format: {e}")
