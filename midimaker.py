@@ -1,7 +1,7 @@
 import serial
 
 
-def read_serial_data(port, baudrate=9600, timeout=1):
+def read_serial_data(port, baudrate=115200, timeout=1):
     """Reads data from a serial port.
 
     Args:
@@ -21,5 +21,5 @@ def read_serial_data(port, baudrate=9600, timeout=1):
 
 
 if __name__ == "__main__":
-    port = "/dev/ttyUSB0"  # Replace with your actual port
+    port = "COM3"  # Replace with your actual port
     read_serial_data(port)
