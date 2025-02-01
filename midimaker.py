@@ -63,23 +63,23 @@ class MidiController:
         pitch_bend = self.cents_to_pitch_bend(remaining_cents)
         velocity = int(max(0, min(127, self.current_volume * 127)))
 
-        # Send pitch bend
+        # Send pitch bend - format as a list of bytes
         msb = (pitch_bend >> 7) & 0x7F
         lsb = pitch_bend & 0x7F
-        self.midi_out.sendMessage([0xE0 | self.midi_channel, lsb, msb])
+        self.midi_out.sendMessage([int(0xE0 | self.midi_channel), int(lsb), int(msb)])
 
         # Handle note changes
         if self.last_note != note:
             if self.last_note is not None:
-                # Send note off for previous note
-                self.midi_out.sendMessage([0x80 | self.midi_channel, self.last_note, 0])
+                # Send note off for previous note - format as a list of bytes
+                self.midi_out.sendMessage([int(0x80 | self.midi_channel), int(self.last_note), 0])
 
-            # Send note on for new note
-            self.midi_out.sendMessage([0x90 | self.midi_channel, note, velocity])
+            # Send note on for new note - format as a list of bytes
+            self.midi_out.sendMessage([int(0x90 | self.midi_channel), int(note), int(velocity)])
             self.last_note = note
         else:
-            # Update velocity if note hasn't changed
-            self.midi_out.sendMessage([0x90 | self.midi_channel, note, velocity])
+            # Update velocity if note hasn't changed - format as a list of bytes
+            self.midi_out.sendMessage([int(0x90 | self.midi_channel), int(note), int(velocity)])
 
     def cents_to_midi_note(self, cents: float) -> Tuple[int, float]:
         """Convert cents to MIDI note number and remaining cents for pitch bend."""
