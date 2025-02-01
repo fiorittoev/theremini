@@ -1,0 +1,5 @@
+/mnt/c/Users/beblo/OneDrive - Michigan State University/Desktop/Programming/Personal Projects/theremini/build/CMakeFiles/edit_cache.dir
+/mnt/c/Users/beblo/OneDrive - Michigan State University/Desktop/Programming/Personal Projects/theremini/build/CMakeFiles/rebuild_cache.dir
+/mnt/c/Users/beblo/OneDrive - Michigan State University/Desktop/Programming/Personal Projects/theremini/build/midi/CMakeFiles/midi_controller.dir
+/mnt/c/Users/beblo/OneDrive - Michigan State University/Desktop/Programming/Personal Projects/theremini/build/midi/CMakeFiles/edit_cache.dir
+/mnt/c/Users/beblo/OneDrive - Michigan State University/Desktop/Programming/Personal Projects/theremini/build/midi/CMakeFiles/rebuild_cache.dir
