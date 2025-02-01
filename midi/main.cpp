@@ -1,4 +1,3 @@
-<<<<<<< HEAD:midi/main.cpp
 #include <stdint.h>
 #include <cmath>
 #include "fwwasm.h"
@@ -85,7 +84,6 @@ int main()
         waitms(1000);
     }
     return 0;
-=======
 #include <stdint.h>
 #include <cmath>
 #include "fwwasm.h"
@@ -174,5 +172,4 @@ int main()
         waitms(1000);
     }
     return 0;
->>>>>>> f069b09bbf89473bae441b806b699679b6618116:main.cpp
 }
