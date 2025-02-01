@@ -97,9 +97,9 @@ class MidiController:
 
     def strip_ansi_codes(self, text: str) -> str:
         """Remove ANSI escape codes from text."""
-        ansi_escape = re.compile(r'\x1B(?:[@-Z\\-_]|\[[0-?]*[ -/]*[@-~])')
-        return ansi_escape.sub('', text)
-    
+        ansi_escape = re.compile(r"\x1B(?:[@-Z\\-_]|\[[0-?]*[ -/]*[@-~])")
+        return ansi_escape.sub("", text)
+
     def process_serial_data(self, baudrate: int = 9600, timeout: int = 1):
         try:
             with serial.Serial(self.serial_port, baudrate, timeout=timeout) as ser:
@@ -111,26 +111,32 @@ class MidiController:
                         if raw_data:
                             try:
                                 # Remove the '0134' or '134' prefix
-                                data = raw_data.replace('0134', '').replace('134', '')
-                                
+                                data = raw_data.replace("0134", "").replace("134", "")
+
                                 # Strip ANSI escape codes
                                 data = self.strip_ansi_codes(data)
-                                
+
                                 # Split the string on whitespace
                                 parts = data.split()
                                 if len(parts) >= 2:
                                     cents = float(parts[0])
                                     volume = float(parts[1])
-                                    
+
                                     # Process the values
                                     self.current_cents = max(-1200, min(1200, cents))
-                                    self.current_volume = max(0.0, min(1.0, volume/127.0))
+                                    self.current_volume = max(
+                                        0.0, min(1.0, volume / 127.0)
+                                    )
                                     self.send_midi_messages()
                                 else:
-                                    print(f"Invalid data format (not enough values): {raw_data}")
+                                    print(
+                                        f"Invalid data format (not enough values): {raw_data}"
+                                    )
 
                             except ValueError as e:
-                                print(f"Could not parse values from '{raw_data}' -> '{data}': {e}")
+                                print(
+                                    f"Could not parse values from '{raw_data}' -> '{data}': {e}"
+                                )
                                 continue
 
                     except ValueError as e:
