@@ -49,14 +49,11 @@ void loop()
     uint8_t event_data[FW_GET_EVENT_DATA_MAX] = {0};
     int last_event;
 
-    printInt("\nloop()\n", printOutColor::printColorBlack, printOutDataType::printUInt32, 0);
-
     // check if there is an event, and if so, get the data from it
     last_event = 0;
     if (hasEvent())
     {
         last_event = getEventData(event_data);
-        printInt("Last event: %d\n", printOutColor::printColorBlack, printOutDataType::printUInt32, last_event);
     }
 
     // if the event was SENSOR_DATA, do something with it
@@ -78,7 +75,7 @@ void loop()
 
 int main()
 {
-    setSensorSettings(1, 0, 100, 1, 0, 1, 0, 1, 0, 0, 0, 0, 0);
+    setSensorSettings(1, 0, 10, 1, 0, 1, 0, 1, 0, 0, 0, 0, 0);
     printInt("\nmain()\n", printOutColor::printColorBlack, printOutDataType::printUInt32, 0);
     while (!exitApp)
     {
