@@ -95,6 +95,7 @@ class MidiController:
         return max(0, min(16383, pitch_bend))
 
     def process_serial_data(self, baudrate: int = 9600, timeout: int = 1):
+
         try:
             with serial.Serial(self.serial_port, baudrate, timeout=timeout) as ser:
                 print(f"Connected to serial port: {self.serial_port}")
@@ -104,32 +105,43 @@ class MidiController:
                         raw_data = ser.readline().decode("utf-8").strip()
                         if raw_data:
                             try:
-                                # Clean the data by removing any unwanted characters (like '0134')
-                                raw_data = "".join(
-                                    e
-                                    for e in raw_data
-                                    if e.isdigit() or e.isspace() or e == "."
-                                )
-                                print(raw_data)
-                                # Split the string into cents and volume
-                                parts = raw_data.split()
-                                if len(parts) >= 2:  # Ensure we have both values
-                                    cents = float(parts[0])
-                                    volume = float(parts[1])
+                                # Remove the '0134' or '134' prefix and find the second occurrence
+                                data = raw_data.replace("0134", "").replace("134", "")
 
-                                    # Process the values
-                                    self.current_cents = max(-1200, min(1200, cents))
-                                    self.current_volume = max(
-                                        0.0, min(1.0, volume / 127.0)
-                                    )  # Assuming volume is 0-127
-                                    self.send_midi_messages()
+                                # Find the position of the second number by looking for a digit after the first decimal point
+                                first_decimal = data.find(".")
+                                if first_decimal != -1:
+                                    second_start = first_decimal + 1
+                                    while second_start < len(data) and (
+                                        data[second_start].isdigit()
+                                        or data[second_start] == "-"
+                                    ):
+                                        second_start += 1
+
+                                    if second_start < len(data):
+                                        # Split into two values
+                                        cents_str = data[:second_start]
+                                        volume_str = data[second_start:]
+
+                                        # Convert to float
+                                        cents = float(cents_str)
+                                        volume = float(volume_str)
+
+                                        # Process the values
+                                        self.current_cents = max(
+                                            -1200, min(1200, cents)
+                                        )
+                                        self.current_volume = max(
+                                            0.0, min(1.0, volume / 127.0)
+                                        )
+                                        self.send_midi_messages()
                                 else:
-                                    print(
-                                        f"Invalid data format - expected two values, got: {raw_data}"
-                                    )
+                                    print(f"No decimal point found in data: {raw_data}")
 
                             except ValueError as e:
-                                print(f"Could not parse values from '{raw_data}': {e}")
+                                print(
+                                    f"Could not parse values from '{raw_data}' -> '{data}': {e}"
+                                )
                                 continue
 
                     except ValueError as e:
