@@ -1,13 +1,12 @@
 #include "fwwasm.h"
-
-volatile uint8_t exitApp = 0;
-
 #include <cmath>    // For atan2, sqrt, fabs
 #include <stdint.h> // For int types
 
 // MIDI Note and Channel
 #define MIDI_NOTE 60   // Middle C (C4)
 #define MIDI_CHANNEL 0 // Channel 1 in MIDI
+
+int8_t exitApp = 0;
 
 // Process Accelerometer Data
 void processAccelData(uint8_t *event_data) {

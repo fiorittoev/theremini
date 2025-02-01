@@ -3,24 +3,12 @@
 
 midi/CMakeFiles/midi_controller.dir/main.cpp.obj
  /mnt/c/Users/beblo/OneDrive - Michigan State University/Desktop/Programming/Personal Projects/theremini/midi/main.cpp
- /opt/wasi-sdk/share/wasi-sysroot/include/wasm32-wasi/c++/v1/stdint.h
- /opt/wasi-sdk/share/wasi-sysroot/include/wasm32-wasi/c++/v1/__config
- /opt/wasi-sdk/share/wasi-sysroot/include/wasm32-wasi/c++/v1/__config_site
- /opt/wasi-sdk/lib/clang/18/include/stdint.h
- /opt/wasi-sdk/share/wasi-sysroot/include/wasm32-wasi/stdint.h
- /opt/wasi-sdk/share/wasi-sysroot/include/wasm32-wasi/bits/alltypes.h
- /opt/wasi-sdk/share/wasi-sysroot/include/wasm32-wasi/__struct_timeval.h
- /opt/wasi-sdk/share/wasi-sysroot/include/wasm32-wasi/__typedef_time_t.h
- /opt/wasi-sdk/share/wasi-sysroot/include/wasm32-wasi/__typedef_suseconds_t.h
- /opt/wasi-sdk/share/wasi-sysroot/include/wasm32-wasi/__struct_timespec.h
- /opt/wasi-sdk/share/wasi-sysroot/include/wasm32-wasi/__struct_iovec.h
- /opt/wasi-sdk/share/wasi-sysroot/include/wasm32-wasi/c++/v1/stddef.h
- /opt/wasi-sdk/lib/clang/18/include/stddef.h
- /opt/wasi-sdk/lib/clang/18/include/__stddef_size_t.h
- /opt/wasi-sdk/share/wasi-sysroot/include/wasm32-wasi/bits/stdint.h
+ /mnt/c/Users/beblo/OneDrive - Michigan State University/Desktop/Programming/Personal Projects/theremini/midi/fwwasm.h
  /opt/wasi-sdk/share/wasi-sysroot/include/wasm32-wasi/c++/v1/cmath
  /opt/wasi-sdk/share/wasi-sysroot/include/wasm32-wasi/c++/v1/__assert
  /opt/wasi-sdk/share/wasi-sysroot/include/wasm32-wasi/c++/v1/__assertion_handler
+ /opt/wasi-sdk/share/wasi-sysroot/include/wasm32-wasi/c++/v1/__config
+ /opt/wasi-sdk/share/wasi-sysroot/include/wasm32-wasi/c++/v1/__config_site
  /opt/wasi-sdk/share/wasi-sysroot/include/wasm32-wasi/c++/v1/__verbose_abort
  /opt/wasi-sdk/share/wasi-sysroot/include/wasm32-wasi/c++/v1/__availability
  /opt/wasi-sdk/share/wasi-sysroot/include/wasm32-wasi/c++/v1/__type_traits/enable_if.h
@@ -42,6 +30,15 @@ midi/CMakeFiles/midi_controller.dir/main.cpp.obj
  /opt/wasi-sdk/share/wasi-sysroot/include/wasm32-wasi/c++/v1/math.h
  /opt/wasi-sdk/share/wasi-sysroot/include/wasm32-wasi/math.h
  /opt/wasi-sdk/share/wasi-sysroot/include/wasm32-wasi/features.h
+ /opt/wasi-sdk/share/wasi-sysroot/include/wasm32-wasi/bits/alltypes.h
+ /opt/wasi-sdk/share/wasi-sysroot/include/wasm32-wasi/__struct_timeval.h
+ /opt/wasi-sdk/share/wasi-sysroot/include/wasm32-wasi/__typedef_time_t.h
+ /opt/wasi-sdk/share/wasi-sysroot/include/wasm32-wasi/__typedef_suseconds_t.h
+ /opt/wasi-sdk/share/wasi-sysroot/include/wasm32-wasi/__struct_timespec.h
+ /opt/wasi-sdk/share/wasi-sysroot/include/wasm32-wasi/__struct_iovec.h
+ /opt/wasi-sdk/share/wasi-sysroot/include/wasm32-wasi/c++/v1/stddef.h
+ /opt/wasi-sdk/lib/clang/18/include/stddef.h
+ /opt/wasi-sdk/lib/clang/18/include/__stddef_size_t.h
  /opt/wasi-sdk/share/wasi-sysroot/include/wasm32-wasi/c++/v1/__math/abs.h
  /opt/wasi-sdk/share/wasi-sysroot/include/wasm32-wasi/c++/v1/__math/copysign.h
  /opt/wasi-sdk/share/wasi-sysroot/include/wasm32-wasi/c++/v1/__math/error_functions.h
@@ -68,5 +65,8 @@ midi/CMakeFiles/midi_controller.dir/main.cpp.obj
  /opt/wasi-sdk/lib/clang/18/include/__stddef_null.h
  /opt/wasi-sdk/share/wasi-sysroot/include/wasm32-wasi/__header_stdlib.h
  /opt/wasi-sdk/share/wasi-sysroot/include/wasm32-wasi/alloca.h
- /mnt/c/Users/beblo/OneDrive - Michigan State University/Desktop/Programming/Personal Projects/theremini/midi/fwwasm.h
+ /opt/wasi-sdk/share/wasi-sysroot/include/wasm32-wasi/c++/v1/stdint.h
+ /opt/wasi-sdk/lib/clang/18/include/stdint.h
+ /opt/wasi-sdk/share/wasi-sysroot/include/wasm32-wasi/stdint.h
+ /opt/wasi-sdk/share/wasi-sysroot/include/wasm32-wasi/bits/stdint.h
 
