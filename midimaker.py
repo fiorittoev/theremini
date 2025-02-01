@@ -22,12 +22,14 @@ class MidiController:
         # MIDI setup with loopMIDI support
         self.midi_channel = midi_channel
         self.midi_out = rtmidi.RtMidiOut()
-        
+
         # Find and connect to loopMIDI port
         port_number = self.find_loopmidi_port()
         if port_number is not None:
             self.midi_out.openPort(port_number)
-            print(f"Connected to loopMIDI port: {self.midi_out.getPortName(port_number)}")
+            print(
+                f"Connected to loopMIDI port: {self.midi_out.getPortName(port_number)}"
+            )
         else:
             print("No loopMIDI port found! Creating one...")
             self.midi_out.openVirtualPort("FreeWilly MIDI")
@@ -137,27 +139,12 @@ def main():
     import sys
     import serial.tools.list_ports
 
-    # Find appropriate serial port
-    print("\nScanning for serial ports...")
-    ports = list(serial.tools.list_ports.comports())
-    
-    if not ports:
-        print("No serial ports found!")
-        sys.exit(1)
-
-    # Try to find the serial port
-    for port in ports:
-        if sys.platform.startswith('win'):
-            SERIAL_PORT = port.device
-            break
-    else:
-        print("No suitable serial port found!")
-        sys.exit(1)
+    SERIAL_PORT = "COM3"
 
     print(f"\nUsing serial port: {SERIAL_PORT}")
-    
+
     MIDI_CHANNEL = 0  # MIDI channel 1
-    
+
     try:
         controller = MidiController(SERIAL_PORT, MIDI_CHANNEL)
         controller.process_serial_data()
