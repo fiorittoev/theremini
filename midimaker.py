@@ -53,36 +53,16 @@ class MidiController:
                 return i
         return None
 
-
     def send_midi_messages(self):
-    """Send MIDI messages based on current cents and volume."""
-    if not self.powered:
-        return
+        """Send MIDI messages based on current cents and volume."""
+        if not self.powered:
+            return
 
-    # Convert cents to note and pitch bend
-    note, remaining_cents = self.cents_to_midi_note(self.current_cents)
-    pitch_bend = self.cents_to_pitch_bend(remaining_cents)
-    velocity = int(max(0, min(127, self.current_volume * 127)))
+        # Convert cents to note and pitch bend
+        note, remaining_cents = self.cents_to_midi_note(self.current_cents)
+        pitch_bend = self.cents_to_pitch_bend(remaining_cents)
+        velocity = int(max(0, min(127, self.current_volume * 127)))
 
-<<<<<<< HEAD
-    # Send pitch bend
-    msb = (pitch_bend >> 7) & 0x7F
-    lsb = pitch_bend & 0x7F
-    self.midi_out.sendMessage([int(0xE0 | self.midi_channel), int(lsb), int(msb)])
-
-    # Handle note changes
-    if self.last_note != note:
-        if self.last_note is not None:
-            # Send note off for previous note
-            self.midi_out.sendMessage([int(0x80 | self.midi_channel), int(self.last_note), 0])
-
-        # Send note on for new note
-        self.midi_out.sendMessage([int(0x90 | self.midi_channel), int(note), int(velocity)])
-        self.last_note = note
-    else:
-        # Update velocity if note hasn't changed
-        self.midi_out.sendMessage([int(0x90 | self.midi_channel), int(note), int(velocity)])
-=======
         # Send pitch bend - format as a list of bytes
         msb = (pitch_bend >> 7) & 0x7F
         lsb = pitch_bend & 0x7F
@@ -92,15 +72,20 @@ class MidiController:
         if self.last_note != note:
             if self.last_note is not None:
                 # Send note off for previous note - format as a list of bytes
-                self.midi_out.sendMessage([int(0x80 | self.midi_channel), int(self.last_note), 0])
+                self.midi_out.sendMessage(
+                    [int(0x80 | self.midi_channel), int(self.last_note), 0]
+                )
 
             # Send note on for new note - format as a list of bytes
-            self.midi_out.sendMessage([int(0x90 | self.midi_channel), int(note), int(velocity)])
+            self.midi_out.sendMessage(
+                [int(0x90 | self.midi_channel), int(note), int(velocity)]
+            )
             self.last_note = note
         else:
             # Update velocity if note hasn't changed - format as a list of bytes
-            self.midi_out.sendMessage([int(0x90 | self.midi_channel), int(note), int(velocity)])
->>>>>>> 7dfe8364befa8331048e0f3282ce06df6ca7d45f
+            self.midi_out.sendMessage(
+                [int(0x90 | self.midi_channel), int(note), int(velocity)]
+            )
 
     def cents_to_midi_note(self, cents: float) -> Tuple[int, float]:
         """Convert cents to MIDI note number and remaining cents for pitch bend."""
