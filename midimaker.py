@@ -30,53 +30,56 @@ class MidiController:
         # Serial setup
         self.serial_port = serial_port
         
-    def process_accel_data(self, x: int, y: int):
-        """Process accelerometer data and convert to MIDI."""
+        # State for alternating line processing
+        self.current_cents = 0
+        self.current_volume = 0
+        
+    def send_midi_messages(self):
+        """Send MIDI messages based on current cents and volume."""
         if not self.powered:
             return
             
-        # Calculate magnitude from center
-        magnitude = math.sqrt(x*x + y*y)
+        # Convert cents to note and pitch bend
+        note, remaining_cents = self.cents_to_midi_note(self.current_cents)
+        pitch_bend = self.cents_to_pitch_bend(remaining_cents)
+        velocity = int(max(0, min(127, self.current_volume * 127)))
         
-        DEAD_ZONE = 100
-        if magnitude < DEAD_ZONE:
+        # Send pitch bend
+        msb = (pitch_bend >> 7) & 0x7F
+        lsb = pitch_bend & 0x7F
+        self.midi_out.send_message([0xE0 | self.midi_channel, lsb, msb])
+        
+        # Handle note changes
+        if self.last_note != note:
             if self.last_note is not None:
-                self.send_midi_note(self.last_note, False)
-                self.last_note = None
-            return
+                # Send note off for previous note
+                self.midi_out.send_message([0x80 | self.midi_channel, self.last_note, 0])
             
-        note = self.calculate_note(x, y)
-        if note != self.last_note:
-            if self.last_note is not None:
-                self.send_midi_note(self.last_note, False)
-            self.send_midi_note(note, True)
+            # Send note on for new note
+            self.midi_out.send_message([0x90 | self.midi_channel, note, velocity])
             self.last_note = note
+        else:
+            # Update velocity if note hasn't changed
+            self.midi_out.send_message([0x90 | self.midi_channel, note, velocity])
             
-    def calculate_note(self, x: int, y: int) -> int:
-        """Calculate MIDI note from accelerometer position."""
-        # Calculate angle from accelerometer values (0-360 degrees)
-        angle = math.atan2(y, x) * 180.0 / math.pi
-        if angle < 0:
-            angle += 360.0
-            
-        # Convert angle to note index (0-7)
-        index = int((angle / 360.0) * 8)
+    def cents_to_midi_note(self, cents: float) -> Tuple[int, float]:
+        """Convert cents to MIDI note number and remaining cents for pitch bend."""
+        # Calculate total semitones from cents
+        semitones = cents / 100.0
         
-        return (self.current_octave * 12) + self.current_scale[index]
+        # Split into whole note and remaining cents
+        whole_semitones = int(math.floor(semitones))
+        remaining_cents = (semitones - whole_semitones) * 100
         
-    def calculate_velocity(self, x: int, y: int) -> int:
-        """Calculate MIDI velocity from accelerometer magnitude."""
-        magnitude = math.sqrt(x*x + y*y)
-        # Map magnitude to MIDI velocity (0-127)
-        DEAD_ZONE = 100
-        return min(127, int((magnitude - DEAD_ZONE) / 32767.0 * 127.0))
-        
-    def send_midi_note(self, note: int, note_on: bool):
-        """Send MIDI note message."""
-        command = 0x90 if note_on else 0x80
-        command |= self.midi_channel
-        velocity = self.calculate_velocity(note, note) if note_on else 0
-        self.midi_out.send_message([command, note, velocity])
+        midi_note = 60 + whole_semitones  # Middle C (60) as base note
+        return midi_note, remaining_cents
+    
+    def cents_to_pitch_bend(self, cents: float) -> int:
+        """Convert cents to MIDI pitch bend value (0-16383)."""
+        # Map cents to pitch bend range (-8192 to +8191)
+        normalized = (cents / 100.0) / 2.0  # +/-1 semitone range
+        pitch_bend = int(8192 + (normalized * 8192))
+        return max(0, min(16383, pitch_bend))
         
     def process_serial_data(self, baudrate: int = 9600, timeout: int = 1):
         """Process incoming serial data from Free Willy."""
@@ -84,13 +87,24 @@ class MidiController:
             with serial.Serial(self.serial_port, baudrate, timeout=timeout) as ser:
                 print(f"Connected to {self.serial_port}")
                 
+                line_counter = 0
                 while self.powered:
                     try:
                         data = ser.readline().decode('utf-8').strip()
                         if data:
-                            # Parse x,y accelerometer data
-                            x, y = map(int, data.split(','))
-                            self.process_accel_data(x, y)
+                            value = float(data)
+                            
+                            # Alternate between processing pitch and volume
+                            if line_counter % 2 == 0:
+                                # First line is pitch (cents)
+                                self.current_cents = max(-1200, min(1200, value))
+                            else:
+                                # Second line is volume (0-1)
+                                self.current_volume = max(0.0, min(1.0, value))
+                                # Send MIDI messages after we have both values
+                                self.send_midi_messages()
+                                
+                            line_counter += 1
                             
                     except ValueError as e:
                         print(f"Invalid data format: {e}")
@@ -104,10 +118,10 @@ class MidiController:
             
         finally:
             if self.last_note is not None:
-                self.send_midi_note(self.last_note, False)
+                self.midi_out.send_message([0x80 | self.midi_channel, self.last_note, 0])
             self.midi_out.close_port()
     
-    # Button control methods
+    # Button control methods remain the same
     def octave_up(self):
         if self.powered and self.current_octave < 8:
             self.current_octave += 1
@@ -129,7 +143,7 @@ class MidiController:
             
     def power_off(self):
         if self.last_note is not None:
-            self.send_midi_note(self.last_note, False)
+            self.midi_out.send_message([0x80 | self.midi_channel, self.last_note, 0])
         self.powered = False
 
 def main():
