@@ -27,16 +27,7 @@ class MidiController:
         # Initialize MIDI output
         self.midi_out = rtmidi.RtMidiOut()
 
-        # List available MIDI ports
-        available_ports = self.midi_out.get_ports()
-        if available_ports:
-            print("Available MIDI ports:")
-            for i, port in enumerate(available_ports):
-                print(f"{i}: {port}")
-            self.midi_out.openPort(0)  # Open the correct port
-        else:
-            print("No MIDI ports available.")
-            self.midi_out.close_port()
+        self.midi_out.openPort(0)  # Open the correct port
 
     def process_accel_data(self, x: int, y: int):
         """Process accelerometer data and convert to MIDI notes."""
