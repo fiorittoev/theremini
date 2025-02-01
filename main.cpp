@@ -1,33 +1,51 @@
 #include <stdint.h>
+#include <cmath>
 #include "fwwasm.h"
 
 volatile uint8_t exitApp = 0;
 
-void processAccelData(uint8_t *event_data)
-{
-    int16_t iX, iY, iZ, iTc, iTf;
-    bool iMoving, iMovingX, iMovingY, iMovingZ;
+#include <cmath>    // For atan2, sqrt, fabs
+#include <stdint.h> // For int types
+
+// MIDI Note and Channel
+#define MIDI_NOTE 60   // Middle C (C4)
+#define MIDI_CHANNEL 0 // Channel 1 in MIDI
+
+// Process Accelerometer Data
+void processAccelData(uint8_t *event_data) {
+    int16_t iX, iY, iZ;
 
     iX = event_data[0] | event_data[1] << 8;
     iY = event_data[2] | event_data[3] << 8;
     iZ = event_data[4] | event_data[5] << 8;
-    iTc = event_data[6] | event_data[7] << 8;
-    iTf = event_data[8] | event_data[9] << 8;
-    iMoving = event_data[10] & 0x1;
-    iMovingX = event_data[10] & 0x2 ? 1 : 0;
-    iMovingY = event_data[10] & 0x4 ? 1 : 0;
-    iMovingZ = event_data[10] & 0x8 ? 1 : 0;
-    printInt("Got accel: X:%d\n", printOutColor::printColorBlue, printOutDataType::printInt16, iX);
-    printInt("Got accel: Y:%d\n", printOutColor::printColorBlue, printOutDataType::printInt16, iY);
-    printInt("Got accel: Z:%d\n", printOutColor::printColorBlue, printOutDataType::printInt16, iZ);
-    printInt("Got iMoving: %d\n", printOutColor::printColorBlue, printOutDataType::printInt16, iMoving);
-    printInt("Got isMovingX: %d\n", printOutColor::printColorBlue, printOutDataType::printInt16, iMovingX);
-    printInt("Got isMovingY: %d\n", printOutColor::printColorBlue, printOutDataType::printInt16, iMovingY);
-    printInt("Got isMovingZ: %d\n", printOutColor::printColorBlue, printOutDataType::printInt16, iMovingZ);
+
+    // Compute roll (Pitch Bend)
+    float roll = atan2(iY, iZ) * 180.0 / M_PI;
+    if (roll < -90) {
+        roll += 360;
+    }
+
+    // Compute pitch (Velocity)
+    float pitch = atan2(-iX, sqrt(iY * iY + iZ * iZ)) * 180.0 / M_PI;
+    pitch = fabs(pitch);
+    if (pitch > 90) pitch = 90;
+
+    // Map roll to MIDI Pitch Bend (-1200 to +1200 cents)
+    int midiCents = ((roll - 270) / 360.0) * 2400;
+    int pitchBend = (midiCents + 1200) * 8192 / 2400; // Scale to 14-bit
+
+    // Map pitch to MIDI Velocity (0 to 127)
+    int velocity = 127 * (1 - (pitch / 90.0));
+
+    // Debug Output
+    printFloat("MIDI Cents: %d\n", printOutColor::printColorGreen, midiCents);
+    printFloat("MIDI Velocity: %d\n", printOutColor::printColorGreen, velocity);
 }
+
 
 void loop()
 {
+
     uint8_t event_data[FW_GET_EVENT_DATA_MAX] = {0};
     int last_event;
 
