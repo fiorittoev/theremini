@@ -99,29 +99,29 @@ class MidiController:
             with serial.Serial(self.serial_port, baudrate, timeout=timeout) as ser:
                 print(f"Connected to serial port: {self.serial_port}")
 
-                line_counter = 0
                 while self.powered:
                     try:
                         raw_data = ser.readline().decode("utf-8").strip()
                         if raw_data:
-                            # Convert string to float, handling potential formatting issues
                             try:
-                                # Handle common number formats and remove any non-numeric characters
-                                # except decimal point and minus sign
-                                cleaned_data = ''.join(c for c in raw_data if c.isdigit() or c in '.-')
-                                value = float(cleaned_data)
-
-                                # Alternate between processing pitch and volume
-                                if line_counter % 2 == 0:
-                                    self.current_cents = max(-1200, min(1200, value))
-                                else:
-                                    self.current_volume = max(0.0, min(1.0, value))
+                                # Clean the data by removing any unwanted characters (like '0134')
+                                cleaned_data = ''.join(c for c in raw_data if c.isdigit() or c in '.-' or c.isspace())
+                                
+                                # Split the string into cents and volume
+                                parts = cleaned_data.split()
+                                if len(parts) >= 2:  # Ensure we have both values
+                                    cents = float(parts[0])
+                                    volume = float(parts[1])
+                                    
+                                    # Process the values
+                                    self.current_cents = max(-1200, min(1200, cents))
+                                    self.current_volume = max(0.0, min(1.0, volume/127.0))  # Assuming volume is 0-127
                                     self.send_midi_messages()
-
-                                line_counter += 1
+                                else:
+                                    print(f"Invalid data format - expected two values, got: {raw_data}")
 
                             except ValueError as e:
-                                print(f"Could not convert '{raw_data}' to float: {e}")
+                                print(f"Could not parse values from '{raw_data}': {e}")
                                 continue
 
                     except ValueError as e:
@@ -136,11 +136,6 @@ class MidiController:
             if self.last_note is not None:
                 self.midi_out.sendMessage([0x80 | self.midi_channel, self.last_note, 0])
             self.midi_out.closePort()
-
-    def power_off(self):
-        if self.last_note is not None:
-            self.midi_out.sendMessage([0x80 | self.midi_channel, self.last_note, 0])
-        self.powered = False
 
 
 def main():
