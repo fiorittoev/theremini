@@ -121,6 +121,7 @@ class MidiController:
                                 if len(parts) >= 2:
                                     cents = float(parts[0])
                                     volume = float(parts[1])
+                                    print(cents,volume)
 
                                     # Process the values
                                     self.current_cents = max(-1200, min(1200, cents))
