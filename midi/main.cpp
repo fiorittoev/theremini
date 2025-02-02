@@ -8,6 +8,63 @@
 
 int8_t exitApp = 0;
 
+const auto NUMBER_OF_LEDS = 7;
+
+struct Color {
+    uint8_t red;
+    uint8_t green;
+    uint8_t blue;
+
+    constexpr Color(uint8_t red, uint8_t green, uint8_t blue) : red(red), green(green), blue(blue) {}
+};
+
+constexpr Color RED(255, 0, 0);
+constexpr Color ORANGE(255, 127, 0);
+constexpr Color YELLOW(255, 255, 0);
+constexpr Color GREEN(0, 255, 0);
+constexpr Color LIGHT_GREEN(0, 255, 191);
+constexpr Color BLUE(0, 0, 255);
+constexpr Color LIGHT_BLUE(0, 191, 255);
+constexpr Color INDIGO(75, 0, 130);
+constexpr Color VIOLET(238, 130, 238);
+constexpr Color PINK(255, 192, 203);
+constexpr Color GRAY(0x30, 0x30, 0x30);
+constexpr Color WHITE(255, 255, 255);
+
+struct PanelInfo {
+    const uint8_t index;
+    const FWGuiEventType event_type;
+    const Color color;
+    const char* text;
+    const char* sub_fname;
+};
+
+constexpr std::array Panels{
+    PanelInfo{1, FWGuiEventType::FWGUI_EVENT_GRAY_BUTTON, GRAY, "GRAY", "/midi/white.sub"},
+    PanelInfo{2, FWGuiEventType::FWGUI_EVENT_YELLOW_BUTTON, YELLOW, "YELLOW", "/midi/yellow.sub"},
+    PanelInfo{3, FWGuiEventType::FWGUI_EVENT_GREEN_BUTTON, GREEN, "GREEN", "/midi/green.sub"},
+    PanelInfo{4, FWGuiEventType::FWGUI_EVENT_BLUE_BUTTON, BLUE, "BLUE", "/midi/blue.sub"},
+    PanelInfo{5, FWGuiEventType::FWGUI_EVENT_RED_BUTTON, RED, "RED", "/midi/red.sub"},
+};
+
+constexpr std::array Buttons{
+    FWGuiEventType::FWGUI_EVENT_GRAY_BUTTON,  FWGuiEventType::FWGUI_EVENT_YELLOW_BUTTON,
+    FWGuiEventType::FWGUI_EVENT_GREEN_BUTTON, FWGuiEventType::FWGUI_EVENT_BLUE_BUTTON,
+    FWGuiEventType::FWGUI_EVENT_RED_BUTTON,
+};
+
+auto setup_panels() -> void {
+    // Setup the main panel that shows pip boy
+    addPanel(0, 1, 0, 0, 0, 0, 0, 0, 1);
+    addControlPictureFromFile(0, 0, 0, 0, "guy-closed.fwi", 1);
+    showPanel(0);
+    // Setup the rest of the panels
+    for (auto& panel : Panels) {
+        addPanel(panel.index, 1, 0, 0, 0, panel.color.red, panel.color.green, panel.color.blue, 1);
+        addControlText(panel.index, 1, 10, 50, 2, 0, 0, 0, 0, panel.text);
+    }
+}
+
 void processAccelData(uint8_t *event_data) {
     int16_t iX, iY, iZ;
     float scaleFactor = 32768.0f / 2.0f; // ±2g
@@ -122,6 +179,7 @@ void loop() {
 }
 
 int main() {
+    setup_panels();
     setSensorSettings(1, 0, 10, 1, 0, 1, 0, 1, 0, 0, 0, 0, 0);
     printInt("\nmain()\n", printOutColor::printColorBlack, printOutDataType::printUInt32, 0);
     while (!exitApp) {
