@@ -1,4 +1,4 @@
-#include "fwwasm.h"
+#include "fwwasm.h" 
 #include <cmath>    // For atan2, sqrt, fabs
 #include <stdint.h> // For int types
 
@@ -21,40 +21,22 @@ void processAccelData(uint8_t *event_data) {
     float y = static_cast<float>(iY) / scaleFactor;
     float z = static_cast<float>(iZ) / scaleFactor;
     
-    // Compute roll (pitch bend)
+    // Compute roll (mapped to a semicircle motion for pitch bend)
     double roll = atan2(y, z) * 180.0 / M_PI;
-    if (roll < -90) {
-        roll += 360;
-    }
+    roll = fmod(roll + 360, 360); // Keep roll in range [0, 360]
+    if (roll > 180) roll -= 360;  // Map to [-180, 180] range
     
+    // Normalize roll to MIDI Pitch Bend range (-1200 to +1200 cents)
+    double midiCents = (roll / 180.0) * 1200;
+
     // Compute pitch (velocity)
     double pitch = atan2(-x, sqrt(y * y + z * z)) * 180.0 / M_PI;
     pitch = fabs(pitch);
-<<<<<<< HEAD
-    if (pitch > 90) pitch = 90;
-    
-    // Map roll to MIDI Pitch Bend (-1200 to +1200 cents)
-    double midiCents = ((roll - 270) / 360.0) * 2400;
-    
-    // Map pitch to MIDI Velocity (0 to 127)
-    double velocity = 127 * (1 - (pitch / 90.0));
-    
-    // Output values
-=======
 
-    // Map roll to MIDI Pitch Bend (-1200 to +1200 cents)
-    double midiCents = ((roll - 270) / 360.0) * 2400;
-
-    // Map pitch to MIDI Velocity (0 to 127) with a 45° limit
-    double velocity;
-    if (pitch > 45) {
-        velocity = 127; // Max velocity at 45° or more
-    } else {
-        velocity = 127 * (pitch / 45.0); // Scale velocity linearly up to 45°
-    }
+    // Map pitch to MIDI Velocity (0 to 127), turning off at 45-degree angle
+    double velocity = (pitch >= 45) ? 0 : 127 * (pitch / 45.0);
 
     // Debug Output
->>>>>>> 2f192a26100ead068ecbd3921c3009b0ea0ef1be
     printFloat("%.1f ", printOutColor::printColorBlack, static_cast<float>(midiCents));
     printFloat("%.1f\n", printOutColor::printColorBlack, static_cast<float>(velocity));
 }
@@ -62,32 +44,12 @@ void processAccelData(uint8_t *event_data) {
 void loop() {
     uint8_t event_data[FW_GET_EVENT_DATA_MAX] = {0};
     int last_event;
-<<<<<<< HEAD
-    
-    // check if there is an event, and if so, get the data from it
-=======
 
     // Check if there is an event, and if so, get the data from it
->>>>>>> 2f192a26100ead068ecbd3921c3009b0ea0ef1be
     last_event = 0;
     if (hasEvent()) {
         last_event = getEventData(event_data);
     }
-<<<<<<< HEAD
-    
-    // if the event was SENSOR_DATA, process it
-    if (last_event == FWGUI_EVENT_GUI_SENSOR_DATA) {
-        processAccelData(event_data);
-    }
-}
-
-int main() {
-    // Initialize sensors with higher sampling rate
-    setSensorSettings(1, 0, 50, 1, 0, 1, 0, 1, 0, 0, 0, 0, 0);
-    
-    printInt("\nmain()\n", printOutColor::printColorBlack, printOutDataType::printUInt32, 0);
-    
-=======
 
     // If the event was SENSOR_DATA, process it
     if (last_event == FWGUI_EVENT_GUI_SENSOR_DATA) {
@@ -104,7 +66,6 @@ int main() {
 int main() {
     setSensorSettings(1, 0, 10, 1, 0, 1, 0, 1, 0, 0, 0, 0, 0);
     printInt("\nmain()\n", printOutColor::printColorBlack, printOutDataType::printUInt32, 0);
->>>>>>> 2f192a26100ead068ecbd3921c3009b0ea0ef1be
     while (!exitApp) {
         loop();
         waitms(20);  // Reduced wait time for more frequent updates
