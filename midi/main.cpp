@@ -29,9 +29,8 @@ void processAccelData(uint8_t *event_data) {
     // Compute pitch angle (for volume control)
     double pitch = atan2(-x, sqrt(y * y + z * z)) * 180.0 / M_PI;
    
-    double velocity;
-    double midi_note;
-    double midi_volume;
+    double midi_note = 0.0;
+    double midi_volume = 0.0;
 
     if (roll < -90.0)
     {
@@ -39,36 +38,36 @@ void processAccelData(uint8_t *event_data) {
 
     }
     else if (roll >= -90.0 and roll <= -67.5){
-        setBoardLED(0,0x30,0x30,0x30,300,LEDManagerLEDMode::ledpulsefade);
-        midi_note=48.0;
-    }
-    else if(roll >= -67.5 and roll <= -45.0){
-        setBoardLED(1,0x30,0x30,0x30,300,LEDManagerLEDMode::ledpulsefade);
-        midi_note=50.0;
-    }
-    else if (roll >= -45.0 and roll <= -22.5){
-        setBoardLED(2,0x30,0x30,0x30,300,LEDManagerLEDMode::ledpulsefade);
-        midi_note=52.0;
-    }
-    else if (roll >= -22.5 and roll <= 0.0){
-        setBoardLED(3,0x30,0x30,0x30,300,LEDManagerLEDMode::ledpulsefade);
-        midi_note=54.0;
-    }
-    else if (roll >= 0.0 and roll <= 22.5){
-        setBoardLED(4,0x30,0x30,0x30,300,LEDManagerLEDMode::ledpulsefade);
-        midi_note=56.0;
-    }
-    else if (roll >= 22.5 and roll <= 45.0){
-        setBoardLED(5,0x30,0x30,0x30,300,LEDManagerLEDMode::ledpulsefade);
-        midi_note=58.0;
-    }
-    else if (roll >= 45.0 and roll <= 67.5){
-        setBoardLED(6,0x30,0x30,0x30,300,LEDManagerLEDMode::ledpulsefade);
+        //setBoardLED(0,0x30,0x30,0x30,300,LEDManagerLEDMode::ledpulsefade);
         midi_note=60.0;
     }
-    else if (roll >= 67.5 and roll <= 90.0){
-        setBoardLED(7,0x30,0x30,0x30,300,LEDManagerLEDMode::ledpulsefade);
+    else if(roll >= -67.5 and roll <= -45.0){
+        //setBoardLED(1,0x30,0x30,0x30,300,LEDManagerLEDMode::ledpulsefade);
         midi_note=62.0;
+    }
+    else if (roll >= -45.0 and roll <= -22.5){
+        //setBoardLED(2,0x30,0x30,0x30,300,LEDManagerLEDMode::ledpulsefade);
+        midi_note=64.0;
+    }
+    else if (roll >= -22.5 and roll <= 0.0){
+        //setBoardLED(3,0x30,0x30,0x30,300,LEDManagerLEDMode::ledpulsefade);
+        midi_note=65.0;
+    }
+    else if (roll >= 0.0 and roll <= 22.5){
+        //setBoardLED(4,0x30,0x30,0x30,300,LEDManagerLEDMode::ledpulsefade);
+        midi_note=67.0;
+    }
+    else if (roll >= 22.5 and roll <= 45.0){
+        //setBoardLED(5,0x30,0x30,0x30,300,LEDManagerLEDMode::ledpulsefade);
+        midi_note=69.0;
+    }
+    else if (roll >= 45.0 and roll <= 67.5){
+        //setBoardLED(6,0x30,0x30,0x30,300,LEDManagerLEDMode::ledpulsefade);
+        midi_note=71.0;
+    }
+    else if (roll >= 67.5 and roll <= 90.0){
+        //setBoardLED(7,0x30,0x30,0x30,300,LEDManagerLEDMode::ledpulsefade);
+        midi_note=72.0;
     }
     if (roll > 90) 
     {
@@ -76,12 +75,12 @@ void processAccelData(uint8_t *event_data) {
     }
     
     if (pitch < -30) {
-        velocity = 127; // Max volume at 45° up or more
+        midi_volume = 127; // Max volume at 45° up or more
     } else if (pitch > 30) {
-        velocity = 0; // Max volume at 45° up or more
+        midi_volume = 0; // Max volume at 45° up or more
     } else {
         // Linear mapping between -45° and +45°
-        velocity = 127 * ((pitch + 30) / 90.0);
+        midi_volume = 127 * ((pitch + 30) / 90.0);
     }
      
     // Debug: Print MIDI pitch and velocity
@@ -127,7 +126,7 @@ int main() {
     printInt("\nmain()\n", printOutColor::printColorBlack, printOutDataType::printUInt32, 0);
     while (!exitApp) {
         loop();
-        waitms(20);  // Reduced wait time for more frequent updates
+        waitms(1);  // Reduced wait time for more frequent updates
     }
     
     return 0;

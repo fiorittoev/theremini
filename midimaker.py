@@ -16,7 +16,7 @@ class MidiController:
 
     def __init__(self, serial_port: str, midi_channel: int = 0):
         self.current_octave = 4
-        self.current_scale = self.MAJOR_SCALE
+        self.current_scale = self.MINOR_SCALE
         self.last_note = None
         self.powered = True
         self.show_guide = False
