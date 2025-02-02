@@ -39,8 +39,8 @@ class MidiController:
 
         # Serial setup
         self.serial_port = serial_port
-        self.current_cents = 0
-        self.current_volume = 0
+        self.current_midi_value = 60  # Middle C
+        self.current_velocity = 64  # Middle velocity
 
     def find_loopmidi_port(self) -> Optional[int]:
         """Find the first available loopMIDI port."""
@@ -55,21 +55,12 @@ class MidiController:
         return None
 
     def send_midi_messages(self):
-        """Send MIDI messages based on current cents and volume."""
+        """Send MIDI messages based on current MIDI value and velocity."""
         if not self.powered:
             return
 
-        # Convert cents to note and pitch bend
-        note, remaining_cents = self.cents_to_midi_note(self.current_cents)
-        pitch_bend = self.cents_to_pitch_bend(remaining_cents)
-        velocity = int(max(0, min(127, self.current_volume * 127)))
-
-        # Send pitch bend
-        pitch_bend_msg = MidiMessage.pitchWheel(self.midi_channel + 1, pitch_bend)
-        self.midi_out.sendMessage(pitch_bend_msg)
-
         # Handle note changes
-        if self.last_note != note:
+        if self.last_note != self.current_midi_value:
             if self.last_note is not None:
                 # Send note off for previous note
                 note_off_msg = MidiMessage.noteOff(
@@ -78,31 +69,17 @@ class MidiController:
                 self.midi_out.sendMessage(note_off_msg)
 
             # Send note on for new note
-            note_on_msg = MidiMessage.noteOn(self.midi_channel + 1, note, velocity)
+            note_on_msg = MidiMessage.noteOn(
+                self.midi_channel + 1, self.current_midi_value, self.current_velocity
+            )
             self.midi_out.sendMessage(note_on_msg)
-            self.last_note = note
+            self.last_note = self.current_midi_value
         else:
             # Update velocity if note hasn't changed
-            note_on_msg = MidiMessage.noteOn(self.midi_channel + 1, note, velocity)
+            note_on_msg = MidiMessage.noteOn(
+                self.midi_channel + 1, self.current_midi_value, self.current_velocity
+            )
             self.midi_out.sendMessage(note_on_msg)
-
-    def cents_to_midi_note(self, cents: float) -> Tuple[int, float]:
-        """Convert cents to MIDI note number and remaining cents for pitch bend."""
-        # Map cents to one of the 8 notes in the C major scale
-        semitones = cents / 100.0
-        whole_semitones = int(math.floor(semitones))
-        remaining_cents = (semitones - whole_semitones) * 100
-        
-        # Ensure the note is within the 8-note range (C4 to C5)
-        midi_note = 60 + self.MAJOR_SCALE[whole_semitones % 8]
-        
-        return midi_note, remaining_cents
-
-    def cents_to_pitch_bend(self, cents: float) -> int:
-        """Convert cents to MIDI pitch bend value (0-16383)."""
-        normalized = (cents / 100.0) / 2.0  # +/-1 semitone range
-        pitch_bend = int(8192 + (normalized * 8192))
-        return max(0, min(16383, pitch_bend))
 
     def strip_ansi_codes(self, text: str) -> str:
         """Remove ANSI escape codes from text."""
@@ -119,38 +96,37 @@ class MidiController:
                         raw_data = ser.readline().decode("utf-8").strip()
                         if raw_data:
                             try:
-                                # Remove the '0134' or '134' prefix
+                                # Remove any prefixes and ANSI codes
                                 data = raw_data.replace("0134", "").replace("134", "")
-
-                                # Strip ANSI escape codes
                                 data = self.strip_ansi_codes(data)
 
                                 # Split the string on whitespace
                                 parts = data.split()
                                 if len(parts) >= 2:
-                                    pitch = float(parts[0])  # Pitch angle in degrees
-                                    volume = float(parts[1])  # Raw volume (not used directly)
+                                    midi_value = int(float(parts[0]))  # MIDI note value
+                                    velocity = int(float(parts[1]))  # MIDI velocity
 
-                                    # Map pitch to volume (0.0 to 1.0)
-                                    if pitch < -45:
-                                        volume = 0.0  # Silent at 45° down or more
-                                    elif pitch > 45:
-                                        volume = 1.0  # Max volume at 45° up or more
-                                    else:
-                                        # Linear mapping between -45° and +45°
-                                        volume = (pitch + 45) / 90.0
+                                    # Ensure values are within MIDI ranges
+                                    self.current_midi_value = max(
+                                        0, min(127, midi_value)
+                                    )
+                                    self.current_velocity = max(0, min(127, velocity))
 
-                                    # Update current volume
-                                    self.current_volume = volume
                                     self.send_midi_messages()
 
                                     # Debug output
-                                    print(f"Pitch: {pitch:.1f}°, Volume: {volume:.2f}")
+                                    print(
+                                        f"MIDI Note: {self.current_midi_value}, Velocity: {self.current_velocity}"
+                                    )
                                 else:
-                                    print(f"Invalid data format (not enough values): {raw_data}")
+                                    print(
+                                        f"Invalid data format (not enough values): {raw_data}"
+                                    )
 
                             except ValueError as e:
-                                print(f"Could not parse values from '{raw_data}' -> '{data}': {e}")
+                                print(
+                                    f"Could not parse values from '{raw_data}' -> '{data}': {e}"
+                                )
                                 continue
 
                     except ValueError as e:
@@ -174,7 +150,6 @@ def main():
     import serial.tools.list_ports
 
     SERIAL_PORT = "COM3"
-
     print(f"\nUsing serial port: {SERIAL_PORT}")
 
     MIDI_CHANNEL = 0  # MIDI channel 1
