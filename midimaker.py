@@ -90,6 +90,8 @@ class MidiController:
         try:
             with serial.Serial(self.serial_port, baudrate, timeout=timeout) as ser:
                 print(f"Connected to serial port: {self.serial_port}")
+                last_valid_midi = None
+                last_valid_velocity = None
 
                 while self.powered:
                     try:
@@ -107,21 +109,25 @@ class MidiController:
                                     velocity = int(float(parts[1]))  # MIDI velocity
 
                                     # Ensure values are within MIDI ranges
-                                    self.current_midi_value = max(
-                                        0, min(127, midi_value)
-                                    )
-                                    self.current_velocity = max(0, min(127, velocity))
+                                    midi_value = max(0, min(127, midi_value))
+                                    velocity = max(0, min(127, velocity))
 
-                                    self.send_midi_messages()
+                                    # Only update and send MIDI messages if the values have changed
+                                    if (midi_value != last_valid_midi or 
+                                        velocity != last_valid_velocity):
+                                        
+                                        self.current_midi_value = midi_value
+                                        self.current_velocity = velocity
+                                        self.send_midi_messages()
 
-                                    # Debug output
-                                    print(
-                                        f"MIDI Note: {self.current_midi_value}, Velocity: {self.current_velocity}"
-                                    )
-                                else:
-                                    print(
-                                        f"Invalid data format (not enough values): {raw_data}"
-                                    )
+                                        # Update last valid values
+                                        last_valid_midi = midi_value
+                                        last_valid_velocity = velocity
+
+                                        # Debug output
+                                        print(
+                                            f"MIDI Note: {self.current_midi_value}, Velocity: {self.current_velocity}"
+                                        )
 
                             except ValueError as e:
                                 print(
