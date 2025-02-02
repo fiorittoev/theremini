@@ -20,8 +20,8 @@ class MidiController:
         self.last_note = None
         self.powered = True
         self.show_guide = False
-        self.last_vel_note=None
-        self.velocity=31
+        self.last_vel_note = None
+        self.velocity = 0
         # MIDI setup with loopMIDI support
         self.midi_channel = midi_channel
         self.midi_out = rtmidi.RtMidiOut()
@@ -64,7 +64,7 @@ class MidiController:
         note, remaining_cents = self.cents_to_midi_note(self.current_cents)
         pitch_bend = self.cents_to_pitch_bend(remaining_cents)
         velocity = int(max(0, min(127, self.current_volume * 127)))
-    
+
         # Send pitch bend
         pitch_bend_msg = MidiMessage.pitchWheel(self.midi_channel + 1, pitch_bend)
         self.midi_out.sendMessage(pitch_bend_msg)
@@ -82,13 +82,21 @@ class MidiController:
             note_on_msg = MidiMessage.noteOn(self.midi_channel + 1, note, velocity)
             self.midi_out.sendMessage(note_on_msg)
             self.last_note = note
-            self.last_vel_note=velocity
-        elif (self.last_vel_note is not None and abs(self.last_vel_note-velocity) >=31):
-            
+            self.last_vel_note = velocity
+        elif (
+            self.last_vel_note is not None and abs(self.last_vel_note - velocity) >= 31
+        ):
+            note_off_msg = MidiMessage.noteOff(self.midi_channel + 1, self.last_note)
+            self.midi_out.sendMessage(note_off_msg)
+
             # Update velocity if note hasn't changed
             note_on_msg = MidiMessage.noteOn(self.midi_channel + 1, note, velocity)
             self.midi_out.sendMessage(note_on_msg)
-            self.last_vel_note=velocity
+            self.last_note = note
+            self.last_vel_note = velocity
+        else:
+            self.last_note = note
+            self.last_vel_note = velocity
 
     def cents_to_midi_note(self, cents: float) -> Tuple[int, float]:
         """Convert cents to MIDI note number and remaining cents for pitch bend."""
@@ -96,10 +104,10 @@ class MidiController:
         semitones = cents / 100.0
         whole_semitones = int(math.floor(semitones))
         remaining_cents = (semitones - whole_semitones) * 100
-        
+
         # Ensure the note is within the 8-note range (C4 to C5)
         midi_note = 60 + self.MAJOR_SCALE[whole_semitones % 8]
-        
+
         return midi_note, remaining_cents
 
     def cents_to_pitch_bend(self, cents: float) -> int:
@@ -133,8 +141,10 @@ class MidiController:
                                 parts = data.split()
                                 if len(parts) >= 2:
                                     pitch = float(parts[0])  # Pitch angle in degrees
-                                    volume = float(parts[1])  # Raw volume (not used directly)
-                                
+                                    volume = float(
+                                        parts[1]
+                                    )  # Raw volume (not used directly)
+
                                     # Map pitch to volume (0.0 to 1.0)
                                     if pitch < -45:
                                         volume = 0.0  # Silent at 45° down or more
@@ -151,10 +161,14 @@ class MidiController:
                                     # Debug output
                                     print(f"Pitch: {pitch:.1f}°, Volume: {volume:.2f}")
                                 else:
-                                    print(f"Invalid data format (not enough values): {raw_data}")
+                                    print(
+                                        f"Invalid data format (not enough values): {raw_data}"
+                                    )
 
                             except ValueError as e:
-                                print(f"Could not parse values from '{raw_data}' -> '{data}': {e}")
+                                print(
+                                    f"Could not parse values from '{raw_data}' -> '{data}': {e}"
+                                )
                                 continue
 
                     except ValueError as e:
