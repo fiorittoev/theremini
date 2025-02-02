@@ -42,12 +42,15 @@ void MidiController::processAccelData(int16_t x, int16_t y) {
         }
         sendMidiNote(note, true);
         lastNote = note;
+    } else {
+        // Sustain the note by sending a note-on message with the same note
+        sendMidiNote(note, true);
     }
 }
 
 int MidiController::calculateNote(int16_t x, int16_t y) const {
     // Calculate angle from accelerometer values (0-360 degrees)
-    float angle = std::atan2(y, x) * 180.0f / M_PI;
+    float angle = std::atan2(y, x * 2) * 180.0f / M_PI; // Emphasize horizontal tilting by multiplying x by 2
     if (angle < 0) angle += 360.0f;
     
     // Convert angle to note index (0-7)

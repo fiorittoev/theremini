@@ -30,55 +30,49 @@ void processAccelData(uint8_t *event_data) {
     // Compute pitch (velocity)
     double pitch = atan2(-x, sqrt(y * y + z * z)) * 180.0 / M_PI;
     pitch = fabs(pitch);
-    if (pitch > 90) pitch = 90;
 
     // Map roll to MIDI Pitch Bend (-1200 to +1200 cents)
     double midiCents = ((roll - 270) / 360.0) * 2400;
-    // Map pitch to MIDI Velocity (0 to 127)
-    double velocity = 127 * (1 - (pitch / 90.0));
+
+    // Map pitch to MIDI Velocity (0 to 127) with a 45° limit
+    double velocity;
+    if (pitch > 45) {
+        velocity = 127; // Max velocity at 45° or more
+    } else {
+        velocity = 127 * (pitch / 45.0); // Scale velocity linearly up to 45°
+    }
 
     // Debug Output
     printFloat("%.1f ", printOutColor::printColorBlack, static_cast<float>(midiCents));
     printFloat("%.1f\n", printOutColor::printColorBlack, static_cast<float>(velocity));
 }
 
-
-void loop()
-{
-
+void loop() {
     uint8_t event_data[FW_GET_EVENT_DATA_MAX] = {0};
     int last_event;
 
-    // check if there is an event, and if so, get the data from it
+    // Check if there is an event, and if so, get the data from it
     last_event = 0;
-    if (hasEvent())
-    {
+    if (hasEvent()) {
         last_event = getEventData(event_data);
     }
 
-    // if the event was SENSOR_DATA, do something with it
-    if (last_event == FWGUI_EVENT_GUI_SENSOR_DATA)
-    {
+    // If the event was SENSOR_DATA, process it
+    if (last_event == FWGUI_EVENT_GUI_SENSOR_DATA) {
         processAccelData(event_data);
     }
 
-//as soon as I enable this if condition the app will not run...?
-#if (0)
-    // exit condition: red button pressed
-    else if (last_event == FWGUI_EVENT_RED_BUTTON)
-    {
+    // Exit condition: red button pressed
+    if (last_event == FWGUI_EVENT_RED_BUTTON) {
         printInt("Exit...\n", printOutColor::printColorBlack, printOutDataType::printUInt32, 0);
         exitApp = 1;
     }
-#endif
 }
 
-int main()
-{
+int main() {
     setSensorSettings(1, 0, 10, 1, 0, 1, 0, 1, 0, 0, 0, 0, 0);
     printInt("\nmain()\n", printOutColor::printColorBlack, printOutDataType::printUInt32, 0);
-    while (!exitApp)
-    {
+    while (!exitApp) {
         loop();
         waitms(1000);
     }
