@@ -72,7 +72,9 @@ class MidiController:
         if self.last_note != note:
             if self.last_note is not None:
                 # Send note off for previous note
-                note_off_msg = MidiMessage.noteOff(self.midi_channel + 1, self.last_note)
+                note_off_msg = MidiMessage.noteOff(
+                    self.midi_channel + 1, self.last_note
+                )
                 self.midi_out.sendMessage(note_off_msg)
 
             # Send note on for new note
