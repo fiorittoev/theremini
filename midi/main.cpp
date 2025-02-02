@@ -94,7 +94,7 @@ void loop() {
     }
 
     // Handle octave changes
-    else if (last_event == FWGUI_EVENT_GREY_BUTTON) {
+    else if (last_event == FWGUI_EVENT_GRAY_BUTTON) {
         if (currentOctave < MAX_OCTAVE) {
             currentOctave++;
             printInt("Octave Up: ", printOutColor::printColorBlack, printOutDataType::printUInt32, currentOctave);
