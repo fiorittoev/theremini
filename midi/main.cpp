@@ -72,11 +72,15 @@ void processAccelData(uint8_t *event_data) {
     } 
     else {
   
-        midi_volume =  abs(pitch - 30)*2.116;
+        midi_volume =  abs(pitch - 30) * 2.116;
     }
 
+    //int brightness = static_cast<int>(midi_volume / 2.6458);
+    //if (brightness <=0)
+    //{
+    //    brightness =1;
+    //}
     setBoardLED(ind, 0x30, 0x30, 0x30, 5, LEDManagerLEDMode::ledpulsefade); 
-
     printFloat("%.1f ", printOutColor::printColorBlack, static_cast<float>(midi_note));
     printFloat("%.1f\n", printOutColor::printColorBlack, static_cast<float>(midi_volume));
 
@@ -113,7 +117,7 @@ int main() {
     printInt("\nmain()\n", printOutColor::printColorBlack, printOutDataType::printUInt32, 0);
     while (!exitApp) {
         loop();
-        waitms(5);  // Reduced wait time for more frequent updates, instead do the volume as a function to repaet
+        waitms(1);  // Reduced wait time for more frequent updates, instead do the volume as a function to repaet
     }
     
     return 0;
