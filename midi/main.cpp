@@ -10,6 +10,12 @@ int8_t exitApp = 0;
 double last_midi_note = -1;  // Track the last note played
 double last_midi_volume = -1;  // Track the last volume
 const double VELOCITY_THRESHOLD = 5.0;  // Minimum velocity change required to send update
+const double EPSILON = 0.01;  // Small value for float comparisons
+
+// Helper function for float comparison
+bool isNotEqual(double a, double b) {
+    return fabs(a - b) > EPSILON;
+}
 
 void processAccelData(uint8_t *event_data) {
     int16_t iX, iY, iZ;
@@ -28,6 +34,10 @@ void processAccelData(uint8_t *event_data) {
    
     double midi_note = 0.0;
     double midi_volume = 0.0;
+
+    // Debug print raw values
+    printFloat("Roll: %.1f ", printOutColor::printColorBlack, static_cast<float>(roll));
+    printFloat("Pitch: %.1f\n", printOutColor::printColorBlack, static_cast<float>(pitch));
 
     // Note calculation logic remains the same
     if (roll < -90.0) {
@@ -63,9 +73,18 @@ void processAccelData(uint8_t *event_data) {
     } else {
         midi_volume = 127 * ((pitch + 30) / 90.0);
     }
+
+    // Always print calculated values
+    printFloat("MIDI Note: %.1f ", printOutColor::printColorBlack, static_cast<float>(midi_note));
+    printFloat("Volume: %.1f\n", printOutColor::printColorBlack, static_cast<float>(midi_volume));
      
+<<<<<<< HEAD
     // If this is the first note or the note has changed, always send
     if (static_cast <int>(last_midi_note) == -1 || static_cast <int>(midi_note) != static_cast <int>(last_midi_note)) {
+=======
+    // If this is the first note or the note has changed
+    if (fabs(last_midi_note - (-1)) < EPSILON || isNotEqual(midi_note, last_midi_note)) {
+>>>>>>> 87db50005421fa9bec83937d369dfa4760f4f5bc
         last_midi_note = midi_note;
         last_midi_volume = midi_volume;
         printFloat("%.1f ", printOutColor::printColorBlack, static_cast<float>(midi_note));
