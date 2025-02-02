@@ -63,26 +63,19 @@ void processAccelData(uint8_t *event_data) {
     } else {
         midi_volume = 127 * ((pitch + 30) / 90.0);
     }
-
-    bool should_send = false;
-    
-    // Always send if note changes
-    if (midi_note != last_midi_note) {
-        should_send = true;
-    }
-    // Only send volume updates if the change is significant
-    else if (fabs(midi_volume - last_midi_volume) >= VELOCITY_THRESHOLD) {
-        should_send = true;
-    }
      
-    // Only print and send MIDI data if we should
-    if (should_send) {
-        printFloat("%.1f ", printOutColor::printColorBlack, static_cast<float>(midi_note));
-        printFloat("%.1f\n", printOutColor::printColorBlack, static_cast<float>(midi_volume));
-        
-        // Update last values
+    // If this is the first note or the note has changed, always send
+    if (last_midi_note == -1 || midi_note != last_midi_note) {
         last_midi_note = midi_note;
         last_midi_volume = midi_volume;
+        printFloat("%.1f ", printOutColor::printColorBlack, static_cast<float>(midi_note));
+        printFloat("%.1f\n", printOutColor::printColorBlack, static_cast<float>(midi_volume));
+    }
+    // For same note, only send if velocity change is significant
+    else if (fabs(midi_volume - last_midi_volume) >= VELOCITY_THRESHOLD) {
+        last_midi_volume = midi_volume;
+        printFloat("%.1f ", printOutColor::printColorBlack, static_cast<float>(midi_note));
+        printFloat("%.1f\n", printOutColor::printColorBlack, static_cast<float>(midi_volume));
     }
 }
 
