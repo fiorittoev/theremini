@@ -8,63 +8,6 @@
 
 int8_t exitApp = 0;
 
-const auto NUMBER_OF_LEDS = 7;
-
-struct Color {
-    uint8_t red;
-    uint8_t green;
-    uint8_t blue;
-
-    constexpr Color(uint8_t red, uint8_t green, uint8_t blue) : red(red), green(green), blue(blue) {}
-};
-
-constexpr Color RED(255, 0, 0);
-constexpr Color ORANGE(255, 127, 0);
-constexpr Color YELLOW(255, 255, 0);
-constexpr Color GREEN(0, 255, 0);
-constexpr Color LIGHT_GREEN(0, 255, 191);
-constexpr Color BLUE(0, 0, 255);
-constexpr Color LIGHT_BLUE(0, 191, 255);
-constexpr Color INDIGO(75, 0, 130);
-constexpr Color VIOLET(238, 130, 238);
-constexpr Color PINK(255, 192, 203);
-constexpr Color GRAY(0x30, 0x30, 0x30);
-constexpr Color WHITE(255, 255, 255);
-
-struct PanelInfo {
-    const uint8_t index;
-    const FWGuiEventType event_type;
-    const Color color;
-    const char* text;
-    const char* sub_fname;
-};
-
-constexpr std::array Panels{
-    PanelInfo{1, FWGuiEventType::FWGUI_EVENT_GRAY_BUTTON, GRAY, "GRAY", "/midi/white.sub"},
-    PanelInfo{2, FWGuiEventType::FWGUI_EVENT_YELLOW_BUTTON, YELLOW, "YELLOW", "/midi/yellow.sub"},
-    PanelInfo{3, FWGuiEventType::FWGUI_EVENT_GREEN_BUTTON, GREEN, "GREEN", "/midi/green.sub"},
-    PanelInfo{4, FWGuiEventType::FWGUI_EVENT_BLUE_BUTTON, BLUE, "BLUE", "/midi/blue.sub"},
-    PanelInfo{5, FWGuiEventType::FWGUI_EVENT_RED_BUTTON, RED, "RED", "/midi/red.sub"},
-};
-
-constexpr std::array Buttons{
-    FWGuiEventType::FWGUI_EVENT_GRAY_BUTTON,  FWGuiEventType::FWGUI_EVENT_YELLOW_BUTTON,
-    FWGuiEventType::FWGUI_EVENT_GREEN_BUTTON, FWGuiEventType::FWGUI_EVENT_BLUE_BUTTON,
-    FWGuiEventType::FWGUI_EVENT_RED_BUTTON,
-};
-
-auto setup_panels() -> void {
-    // Setup the main panel that shows pip boy
-    addPanel(0, 1, 0, 0, 0, 0, 0, 0, 1);
-    addControlPictureFromFile(0, 0, 0, 0, "guy-closed.fwi", 1);
-    showPanel(0);
-    // Setup the rest of the panels
-    for (auto& panel : Panels) {
-        addPanel(panel.index, 1, 0, 0, 0, panel.color.red, panel.color.green, panel.color.blue, 1);
-        addControlText(panel.index, 1, 10, 50, 2, 0, 0, 0, 0, panel.text);
-    }
-}
-
 void processAccelData(uint8_t *event_data) {
     int16_t iX, iY, iZ;
     float scaleFactor = 32768.0f / 2.0f; // ±2g
@@ -92,43 +35,37 @@ void processAccelData(uint8_t *event_data) {
     if (roll < -90.0)
     {
         roll = -90.0;
+        midi_note = 60.0;
 
     }
-    else if (roll >= -90.0 and roll <= -67.5){
-        //setBoardLED(0,0x30,0x30,0x30,300,LEDManagerLEDMode::ledpulsefade);
+    else if (roll >= -90.0 && roll <= -67.5){
         midi_note=60.0;
     }
-    else if(roll >= -67.5 and roll <= -45.0){
-        //setBoardLED(1,0x30,0x30,0x30,300,LEDManagerLEDMode::ledpulsefade);
+    else if(roll >= -67.5 && roll <= -45.0){
         midi_note=62.0;
     }
-    else if (roll >= -45.0 and roll <= -22.5){
-        //setBoardLED(2,0x30,0x30,0x30,300,LEDManagerLEDMode::ledpulsefade);
+    else if (roll >= -45.0 && roll <= -22.5){
         midi_note=64.0;
     }
-    else if (roll >= -22.5 and roll <= 0.0){
-        //setBoardLED(3,0x30,0x30,0x30,300,LEDManagerLEDMode::ledpulsefade);
+    else if (roll >= -22.5 && roll <= 0.0){
         midi_note=65.0;
     }
-    else if (roll >= 0.0 and roll <= 22.5){
-        //setBoardLED(4,0x30,0x30,0x30,300,LEDManagerLEDMode::ledpulsefade);
+    else if (roll >= 0.0 && roll <= 22.5){
         midi_note=67.0;
     }
-    else if (roll >= 22.5 and roll <= 45.0){
-        //setBoardLED(5,0x30,0x30,0x30,300,LEDManagerLEDMode::ledpulsefade);
+    else if (roll >= 22.5 && roll <= 45.0){
         midi_note=69.0;
     }
-    else if (roll >= 45.0 and roll <= 67.5){
-        //setBoardLED(6,0x30,0x30,0x30,300,LEDManagerLEDMode::ledpulsefade);
+    else if (roll >= 45.0 && roll <= 67.5){
         midi_note=71.0;
     }
-    else if (roll >= 67.5 and roll <= 90.0){
-        //setBoardLED(7,0x30,0x30,0x30,300,LEDManagerLEDMode::ledpulsefade);
+    else if (roll >= 67.5 && roll <= 90.0){
         midi_note=72.0;
     }
     if (roll > 90) 
     {
         roll = 90;
+        midi_note=72.0;
     }
     
     if (pitch < -30) {
@@ -179,12 +116,12 @@ void loop() {
 }
 
 int main() {
-    setup_panels();
+    //setup_panels();
     setSensorSettings(1, 0, 10, 1, 0, 1, 0, 1, 0, 0, 0, 0, 0);
     printInt("\nmain()\n", printOutColor::printColorBlack, printOutDataType::printUInt32, 0);
     while (!exitApp) {
         loop();
-        waitms(1);  // Reduced wait time for more frequent updates
+        waitms(20);  // Reduced wait time for more frequent updates
     }
     
     return 0;
