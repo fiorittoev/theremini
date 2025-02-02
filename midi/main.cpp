@@ -11,7 +11,9 @@ int8_t exitApp = 0;
 void processAccelData(uint8_t *event_data) {
     int16_t iX, iY, iZ;
     float scaleFactor = 32768.0f / 2.0f;
-    
+    int red=0xFF;
+    int green=0xFF;
+    int blue=0xFF;
     iX = static_cast<int16_t>(event_data[0] | event_data[1] << 8);
     iY = static_cast<int16_t>(event_data[2] | event_data[3] << 8);
     iZ = static_cast<int16_t>(event_data[4] | event_data[5] << 8);
@@ -31,55 +33,81 @@ void processAccelData(uint8_t *event_data) {
     if (roll < -90.0) {
         roll = -90.0;
         midi_note = 60.0;
+        red=0xFF;
+        green=0x33;
+        blue=0x33;
         ind = 0;
     } else if (roll >= -90.0 && roll <= -67.5) {
         midi_note = 60.0;
         ind = 0;
+        red=0xFF;
+        green=0x99;
+        blue=0x33;
     } else if(roll >= -67.5 && roll <= -45.0) {
         midi_note = 62.0;
         ind = 1;
+        red=0xFF;
+        green=0xFF;
+        blue=0x33;
     } else if (roll >= -45.0 && roll <= -22.5) {
         midi_note = 64.0;
         ind = 2;
+        red=0x99;
+        green=0xFF;
+        blue=0x33;
     } else if (roll >= -22.5 && roll <= 0.0) {
         midi_note = 65.0;
         ind = 3;
+        red=0x33;
+        green=0xFF;
+        blue=0x99;
     } else if (roll >= 0.0 && roll <= 22.5) {
         midi_note = 67.0;
         ind = 4;
+        red=0x33;
+        green=0x99;
+        blue=0xFF;
     } else if (roll >= 22.5 && roll <= 45.0) {
         midi_note = 69.0;
         ind = 5;
+        red=0x99;
+        green=0x33;
+        blue=0xFF;
     } else if (roll >= 45.0 && roll <= 67.5) {
         midi_note = 71.0;
         ind=6;
+        red=0xFF;
+        green=0x33;
+        blue=0x99;
     } else if (roll >= 67.5 && roll <= 90.0) {
         midi_note = 72.0;
         ind=0;
+        red=0xFF;
+        green=0x99;
+        blue=0x99;
     }
     if (roll > 90) {
         roll = 90;
         midi_note = 72.0;
         ind=0;
+        red=0xFF;
+        green=0xCC;
+        blue=0x99;
     }
     
     // Volume calculation logic remains the same
     if (pitch < -30) {
-        midi_volume = 127;
+        midi_volume = 0;
     } 
     else if (pitch > 30) {
-        midi_volume = 0;
+        midi_volume = 127;
     } 
     else {
   
-        midi_volume =  abs(pitch - 30) * 2.116;
+        midi_volume =  abs(pitch + 30) * 2.116;
     }
 
-    //int brightness = static_cast<int>(midi_volume / 2.6458);
-    //if (brightness <=0)
-    //{
-    //    brightness =1;
-    //}
+    
     setBoardLED(ind, 0x30, 0x30, 0x30, 5, LEDManagerLEDMode::ledpulsefade); 
     printFloat("%.1f ", printOutColor::printColorBlack, static_cast<float>(midi_note));
     printFloat("%.1f\n", printOutColor::printColorBlack, static_cast<float>(midi_volume));
