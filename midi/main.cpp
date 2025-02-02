@@ -25,31 +25,42 @@ void processAccelData(uint8_t *event_data) {
    
     double midi_note = 0.0;
     double midi_volume = 0.0;
+    int ind = 0;
 
     // Note calculation logic remains the same
     if (roll < -90.0) {
         roll = -90.0;
         midi_note = 60.0;
+        ind = 0;
     } else if (roll >= -90.0 && roll <= -67.5) {
         midi_note = 60.0;
+        ind = 0;
     } else if(roll >= -67.5 && roll <= -45.0) {
         midi_note = 62.0;
+        ind = 1;
     } else if (roll >= -45.0 && roll <= -22.5) {
         midi_note = 64.0;
+        ind = 2;
     } else if (roll >= -22.5 && roll <= 0.0) {
         midi_note = 65.0;
+        ind = 3;
     } else if (roll >= 0.0 && roll <= 22.5) {
         midi_note = 67.0;
+        ind = 4;
     } else if (roll >= 22.5 && roll <= 45.0) {
         midi_note = 69.0;
+        ind = 5;
     } else if (roll >= 45.0 && roll <= 67.5) {
         midi_note = 71.0;
+        ind=6;
     } else if (roll >= 67.5 && roll <= 90.0) {
         midi_note = 72.0;
+        ind=0;
     }
     if (roll > 90) {
         roll = 90;
         midi_note = 72.0;
+        ind=0;
     }
     
     // Volume calculation logic remains the same
@@ -63,6 +74,8 @@ void processAccelData(uint8_t *event_data) {
   
         midi_volume =  abs(pitch - 30)*2.116;
     }
+
+    setBoardLED(ind, 0x30, 0x30, 0x30, 5, LEDManagerLEDMode::ledpulsefade); 
 
     printFloat("%.1f ", printOutColor::printColorBlack, static_cast<float>(midi_note));
     printFloat("%.1f\n", printOutColor::printColorBlack, static_cast<float>(midi_volume));
@@ -100,7 +113,7 @@ int main() {
     printInt("\nmain()\n", printOutColor::printColorBlack, printOutDataType::printUInt32, 0);
     while (!exitApp) {
         loop();
-        waitms(1);  // Reduced wait time for more frequent updates, instead do the volume as a function to repaet
+        waitms(5);  // Reduced wait time for more frequent updates, instead do the volume as a function to repaet
     }
     
     return 0;
