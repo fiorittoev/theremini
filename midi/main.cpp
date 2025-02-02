@@ -74,17 +74,20 @@ void processAccelData(uint8_t *event_data) {
     }
 }
 
+// not "proper" loop check the note holding functions to play notes out
 void loop() {
     uint8_t event_data[FW_GET_EVENT_DATA_MAX] = {0};
     int last_event;
 
     // Check if there is an event, and if so, get the data from it
     last_event = 0;
+    //note changer here?
     if (hasEvent()) {
         last_event = getEventData(event_data);
     }
 
     // If the event was SENSOR_DATA, process it
+    // note changer here?
     if (last_event == FWGUI_EVENT_GUI_SENSOR_DATA) {
         processAccelData(event_data);
     }
@@ -113,7 +116,7 @@ int main() {
     printInt("\nmain()\n", printOutColor::printColorBlack, printOutDataType::printUInt32, 0);
     while (!exitApp) {
         loop();
-        waitms(20);  // Reduced wait time for more frequent updates
+        waitms(20);  // Reduced wait time for more frequent updates, instead do the volume as a function to repaet
     }
     
     return 0;
