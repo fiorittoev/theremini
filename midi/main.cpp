@@ -26,35 +26,30 @@ void processAccelData(uint8_t *event_data) {
     // Compute roll angle (in degrees)
     double roll = atan2(y, z) * 180.0 / M_PI;
 
-
-    // Map roll to MIDI pitch (cents)
-    double midiCents;
-    if (roll < -90) {
-        midiCents = -1200; // Minimum pitch bend (left tilt)
-    } else if (roll > 90) {
-        midiCents = 1200; // Maximum pitch bend (right tilt)
-    } else {
-        // Linear mapping between -90° and +90°
-        midiCents = (roll / 90.0) * 1200;
-    }
-
     // Compute pitch angle (for volume control)
     double pitch = atan2(-x, sqrt(y * y + z * z)) * 180.0 / M_PI;
 
-    // Map pitch to volume (MIDI velocity)
-    double velocity;
-    if (pitch < -45) {
-        velocity = 0; // Silent at 45° down or more
-    } else if (pitch > 45) {
-        velocity = 127; // Max volume at 45° up or more
-    } else {
-        // Linear mapping between -45° and +45°
-        velocity = 127 * ((pitch + 45) / 90.0);
+    if (pitch < -30.0)
+    {
+        pitch = -30.0;
     }
-
+    if (pitch > 30.0)
+    {
+        pitch = 30.0;
+    }
+    if (roll < -90.0)
+    {
+        roll = -90.0;
+    }
+    if (roll > 90) 
+    {
+        roll = 90;
+    }
+        
+     
     // Debug: Print MIDI pitch and velocity
-    printFloat("%.1f ", printOutColor::printColorBlack, static_cast<float>(midiCents));
-    printFloat("%.1f\n", printOutColor::printColorBlack, static_cast<float>(velocity));
+    printFloat("%.1f ", printOutColor::printColorBlack, static_cast<float>(roll));
+    printFloat("%.1f\n", printOutColor::printColorBlack, static_cast<float>(pitch));
 }
 
 void loop() {
