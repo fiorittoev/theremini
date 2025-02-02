@@ -8,20 +8,48 @@
 
 int8_t exitApp = 0;
 
-// Process Accelerometer Data
 void processAccelData(uint8_t *event_data) {
     int16_t iX, iY, iZ;
     float scaleFactor = 32768.0f / 2.0f; // ±2g
     
+    // Read raw accelerometer data
     iX = static_cast<int16_t>(event_data[0] | event_data[1] << 8);
     iY = static_cast<int16_t>(event_data[2] | event_data[3] << 8);
     iZ = static_cast<int16_t>(event_data[4] | event_data[5] << 8);
     
+    // Scale accelerometer data to g-force
     float x = static_cast<float>(iX) / scaleFactor;
     float y = static_cast<float>(iY) / scaleFactor;
     float z = static_cast<float>(iZ) / scaleFactor;
-    
-    // Compute pitch angle (in degrees)
+
+    // Debug: Print raw and scaled accelerometer values
+    printFloat("Raw X: ", printOutColor::printColorBlack, static_cast<float>(iX));
+    printFloat(" Y: ", printOutColor::printColorBlack, static_cast<float>(iY));
+    printFloat(" Z: ", printOutColor::printColorBlack, static_cast<float>(iZ));
+    printFloat(" | Scaled X: ", printOutColor::printColorBlack, x);
+    printFloat(" Y: ", printOutColor::printColorBlack, y);
+    printFloat(" Z: ", printOutColor::printColorBlack, z);
+    printFloat("\n", printOutColor::printColorBlack, 0.0f);
+
+    // Compute roll angle (in degrees)
+    double roll = atan2(y, z) * 180.0 / M_PI;
+
+    // Debug: Print roll angle
+    printFloat("Roll: ", printOutColor::printColorBlack, static_cast<float>(roll));
+    printFloat("\n", printOutColor::printColorBlack, 0.0f);
+
+    // Map roll to MIDI pitch (cents)
+    double midiCents;
+    if (roll < -90) {
+        midiCents = -1200; // Minimum pitch bend (left tilt)
+    } else if (roll > 90) {
+        midiCents = 1200; // Maximum pitch bend (right tilt)
+    } else {
+        // Linear mapping between -90° and +90°
+        midiCents = (roll / 90.0) * 1200;
+    }
+
+    // Compute pitch angle (for volume control)
     double pitch = atan2(-x, sqrt(y * y + z * z)) * 180.0 / M_PI;
 
     // Map pitch to volume (MIDI velocity)
@@ -35,9 +63,10 @@ void processAccelData(uint8_t *event_data) {
         velocity = 127 * ((pitch + 45) / 90.0);
     }
 
-    // Debug Output
-    printFloat("%.1f ", printOutColor::printColorBlack, static_cast<float>(pitch));
-    printFloat("%.1f\n", printOutColor::printColorBlack, static_cast<float>(velocity));
+    // Debug: Print MIDI pitch and velocity
+    printFloat("MIDI Cents: ", printOutColor::printColorBlack, static_cast<float>(midiCents));
+    printFloat(" | Velocity: ", printOutColor::printColorBlack, static_cast<float>(velocity));
+    printFloat("\n", printOutColor::printColorBlack, 0.0f);
 }
 
 void loop() {
