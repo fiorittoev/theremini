@@ -5,8 +5,11 @@
 // MIDI Note and Channel
 #define MIDI_NOTE 60   // Middle C (C4)
 #define MIDI_CHANNEL 0 // Channel 1 in MIDI
+#define MIN_OCTAVE 2   // Lowest octave
+#define MAX_OCTAVE 6   // Highest octave
 
 int8_t exitApp = 0;
+int currentOctave = 4; // Start at middle octave
 
 void processAccelData(uint8_t *event_data) {
     int16_t iX, iY, iZ;
@@ -51,6 +54,9 @@ void processAccelData(uint8_t *event_data) {
         roll = 90;
         midi_note = 72.0;
     }
+
+    // Apply octave offset
+    midi_note = midi_note + ((currentOctave - 4) * 12);
     
     // Volume calculation logic remains the same
     if (pitch < -30) {
@@ -87,8 +93,25 @@ void loop() {
         processAccelData(event_data);
     }
 
+    // Handle octave changes
+    else if (last_event == FWGUI_EVENT_GREY_BUTTON) {
+        if (currentOctave < MAX_OCTAVE) {
+            currentOctave++;
+            printInt("Octave Up: ", printOutColor::printColorBlack, printOutDataType::printUInt32, currentOctave);
+            printInt("\n", printOutColor::printColorBlack, printOutDataType::printUInt32, 0);
+        }
+    }
+
+    else if (last_event == FWGUI_EVENT_YELLOW_BUTTON) {
+        if (currentOctave > MIN_OCTAVE) {
+            currentOctave--;
+            printInt("Octave Down: ", printOutColor::printColorBlack, printOutDataType::printUInt32, currentOctave);
+            printInt("\n", printOutColor::printColorBlack, printOutDataType::printUInt32, 0);
+        }
+    }
+
     // Reset accelerometer on blue button press
-    if (last_event == FWGUI_EVENT_BLUE_BUTTON) {        
+    else if (last_event == FWGUI_EVENT_BLUE_BUTTON) {        
         // Reset accelerometer values to default (neutral position)
         uint8_t reset_data[6] = {0, 0, 0, 0, 0, 0}; // x = 0, y = 0, z = 1 (scaled)
         reset_data[4] = 0x00; // z low byte

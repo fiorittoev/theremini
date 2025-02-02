@@ -15,9 +15,9 @@ class MidiController:
     BLUES_SCALE = [0, 3, 5, 6, 7, 10, 12, 15]
 
     def __init__(self, serial_port: str, midi_channel: int = 0):
-        self.current_octave = 4
+        self.current_octave = 4  # Start at middle octave
+        self.base_octave = 4     # Reference octave for calculations
         self.current_scale = self.MAJOR_SCALE
-        self.current_scale = self.MINOR_SCALE
         self.last_note = None
         self.last_velocity = None
         self.powered = True
@@ -31,9 +31,7 @@ class MidiController:
         port_number = self.find_loopmidi_port()
         if port_number is not None:
             self.midi_out.openPort(port_number)
-            print(
-                f"Connected to loopMIDI port: {self.midi_out.getPortName(port_number)}"
-            )
+            print(f"Connected to loopMIDI port: {self.midi_out.getPortName(port_number)}")
         else:
             print("No loopMIDI port found! Creating one...")
             self.midi_out.openVirtualPort("FreeWilly MIDI")
@@ -110,31 +108,36 @@ class MidiController:
                                 data = raw_data.replace("0134", "").replace("134", "")
                                 data = self.strip_ansi_codes(data)
 
-                                # Split the string on whitespace
+                                # Check for octave change messages
+                                if "Octave Up:" in data:
+                                    self.current_octave = min(6, self.current_octave + 1)
+                                    print(f"Octave changed to: {self.current_octave}")
+                                    continue
+                                elif "Octave Down:" in data:
+                                    self.current_octave = max(2, self.current_octave - 1)
+                                    print(f"Octave changed to: {self.current_octave}")
+                                    continue
+
+                                # Process MIDI note data
                                 parts = data.split()
                                 if len(parts) >= 2:
-                                    midi_value = int(float(parts[0]))  # MIDI note value
-                                    velocity = int(float(parts[1]))  # MIDI velocity
+                                    # Get base MIDI note and velocity
+                                    base_midi_value = int(float(parts[0]))
+                                    velocity = int(float(parts[1]))
 
-                                    # Ensure values are within MIDI ranges
-                                    self.current_midi_value = midi_value
+                                    # Apply octave adjustment
+                                    octave_offset = (self.current_octave - self.base_octave) * 12
+                                    self.current_midi_value = base_midi_value + octave_offset
                                     self.current_velocity = velocity
 
                                     self.send_midi_messages()
 
-                                    # Debug output
-                                    print(
-                                        f"MIDI Note: {self.current_midi_value}, Velocity: {self.current_velocity}"
-                                    )
+                                    print(f"MIDI Note: {self.current_midi_value}, Velocity: {self.current_velocity}, Octave: {self.current_octave}")
                                 else:
-                                    print(
-                                        f"Invalid data format (not enough values): {raw_data}"
-                                    )
+                                    print(f"Invalid data format (not enough values): {raw_data}")
 
                             except ValueError as e:
-                                print(
-                                    f"Could not parse values from '{raw_data}' -> '{data}': {e}"
-                                )
+                                print(f"Could not parse values from '{raw_data}' -> '{data}': {e}")
                                 continue
 
                     except ValueError as e:
@@ -147,9 +150,7 @@ class MidiController:
             print(f"Serial port error: {e}")
         finally:
             if self.last_note is not None:
-                self.midi_out.sendMessage(
-                    [int(0x80 | self.midi_channel), int(self.last_note), 0]
-                )
+                self.midi_out.sendMessage([int(0x80 | self.midi_channel), int(self.last_note), 0])
             self.midi_out.closePort()
 
 
