@@ -65,7 +65,7 @@ void processAccelData(uint8_t *event_data) {
     }
      
     // If this is the first note or the note has changed, always send
-    if (last_midi_note == -1 || midi_note != last_midi_note) {
+    if (static_cast <int>(last_midi_note) == -1 || static_cast <int>(midi_note) != static_cast <int>(last_midi_note)) {
         last_midi_note = midi_note;
         last_midi_volume = midi_volume;
         printFloat("%.1f ", printOutColor::printColorBlack, static_cast<float>(midi_note));
