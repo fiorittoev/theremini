@@ -22,21 +22,10 @@ void processAccelData(uint8_t *event_data) {
     float y = static_cast<float>(iY) / scaleFactor;
     float z = static_cast<float>(iZ) / scaleFactor;
 
-    // Debug: Print raw and scaled accelerometer values
-    printFloat("Raw X: ", printOutColor::printColorBlack, static_cast<float>(iX));
-    printFloat(" Y: ", printOutColor::printColorBlack, static_cast<float>(iY));
-    printFloat(" Z: ", printOutColor::printColorBlack, static_cast<float>(iZ));
-    printFloat(" | Scaled X: ", printOutColor::printColorBlack, x);
-    printFloat(" Y: ", printOutColor::printColorBlack, y);
-    printFloat(" Z: ", printOutColor::printColorBlack, z);
-    printFloat("\n", printOutColor::printColorBlack, 0.0f);
 
     // Compute roll angle (in degrees)
     double roll = atan2(y, z) * 180.0 / M_PI;
 
-    // Debug: Print roll angle
-    printFloat("Roll: ", printOutColor::printColorBlack, static_cast<float>(roll));
-    printFloat("\n", printOutColor::printColorBlack, 0.0f);
 
     // Map roll to MIDI pitch (cents)
     double midiCents;
@@ -64,9 +53,8 @@ void processAccelData(uint8_t *event_data) {
     }
 
     // Debug: Print MIDI pitch and velocity
-    printFloat("MIDI Cents: ", printOutColor::printColorBlack, static_cast<float>(midiCents));
-    printFloat(" | Velocity: ", printOutColor::printColorBlack, static_cast<float>(velocity));
-    printFloat("\n", printOutColor::printColorBlack, 0.0f);
+    printFloat("%.1f ", printOutColor::printColorBlack, static_cast<float>(midiCents));
+    printFloat("%.1f\n", printOutColor::printColorBlack, static_cast<float>(velocity));
 }
 
 void loop() {
