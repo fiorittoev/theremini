@@ -88,10 +88,14 @@ class MidiController:
 
     def cents_to_midi_note(self, cents: float) -> Tuple[int, float]:
         """Convert cents to MIDI note number and remaining cents for pitch bend."""
+        # Map cents to one of the 8 notes in the C major scale
         semitones = cents / 100.0
         whole_semitones = int(math.floor(semitones))
         remaining_cents = (semitones - whole_semitones) * 100
-        midi_note = 60 + whole_semitones  # Middle C (60) as base note
+        
+        # Ensure the note is within the 8-note range (C4 to C5)
+        midi_note = 60 + self.MAJOR_SCALE[whole_semitones % 8]
+        
         return midi_note, remaining_cents
 
     def cents_to_pitch_bend(self, cents: float) -> int:
@@ -124,25 +128,29 @@ class MidiController:
                                 # Split the string on whitespace
                                 parts = data.split()
                                 if len(parts) >= 2:
-                                    cents = float(parts[0])
-                                    volume = float(parts[1])
-                                    print(cents, volume)
+                                    pitch = float(parts[0])  # Pitch angle in degrees
+                                    volume = float(parts[1])  # Raw volume (not used directly)
 
-                                    # Process the values
-                                    self.current_cents = max(-1200, min(1200, cents))
-                                    self.current_volume = max(
-                                        0.0, min(1.0, volume / 127.0)
-                                    )
+                                    # Map pitch to volume (0.0 to 1.0)
+                                    if pitch < -45:
+                                        volume = 0.0  # Silent at 45° down or more
+                                    elif pitch > 45:
+                                        volume = 1.0  # Max volume at 45° up or more
+                                    else:
+                                        # Linear mapping between -45° and +45°
+                                        volume = (pitch + 45) / 90.0
+
+                                    # Update current volume
+                                    self.current_volume = volume
                                     self.send_midi_messages()
+
+                                    # Debug output
+                                    print(f"Pitch: {pitch:.1f}°, Volume: {volume:.2f}")
                                 else:
-                                    print(
-                                        f"Invalid data format (not enough values): {raw_data}"
-                                    )
+                                    print(f"Invalid data format (not enough values): {raw_data}")
 
                             except ValueError as e:
-                                print(
-                                    f"Could not parse values from '{raw_data}' -> '{data}': {e}"
-                                )
+                                print(f"Could not parse values from '{raw_data}' -> '{data}': {e}")
                                 continue
 
                     except ValueError as e:

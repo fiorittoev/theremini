@@ -56,14 +56,11 @@ int MidiController::calculateNote(int16_t x, int16_t y) const {
     // Convert angle to note index (0-7)
     int index = static_cast<int>((angle / 360.0f) * 8);
     
-    // Get current scale pattern
-    const int* scale;
-    switch (currentScale) {
-        case Scale::MINOR: scale = MINOR_SCALE; break;
-        case Scale::PENTATONIC: scale = PENTATONIC_SCALE; break;
-        case Scale::BLUES: scale = BLUES_SCALE; break;
-        default: scale = MAJOR_SCALE;
-    }
+    // Get current scale pattern (C Major Scale)
+    const int* scale = MAJOR_SCALE;
+    
+    // Ensure the index is within the 8-note range
+    index = index % 8;
     
     return (currentOctave * 12) + scale[index];
 }

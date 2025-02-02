@@ -1,4 +1,4 @@
-#include "fwwasm.h" 
+#include "fwwasm.h"
 #include <cmath>    // For atan2, sqrt, fabs
 #include <stdint.h> // For int types
 
@@ -21,23 +21,22 @@ void processAccelData(uint8_t *event_data) {
     float y = static_cast<float>(iY) / scaleFactor;
     float z = static_cast<float>(iZ) / scaleFactor;
     
-    // Compute roll (mapped to a semicircle motion for pitch bend)
-    double roll = atan2(y, z) * 180.0 / M_PI;
-    roll = fmod(roll + 360, 360); // Keep roll in range [0, 360]
-    if (roll > 180) roll -= 360;  // Map to [-180, 180] range
-    
-    // Normalize roll to MIDI Pitch Bend range (-1200 to +1200 cents)
-    double midiCents = (roll / 180.0) * 1200;
-
-    // Compute pitch (velocity)
+    // Compute pitch angle (in degrees)
     double pitch = atan2(-x, sqrt(y * y + z * z)) * 180.0 / M_PI;
-    pitch = fabs(pitch);
 
-    // Map pitch to MIDI Velocity (0 to 127), turning off at 45-degree angle
-    double velocity = (pitch >= 45) ? 0 : 127 * (pitch / 45.0);
+    // Map pitch to volume (MIDI velocity)
+    double velocity;
+    if (pitch < -45) {
+        velocity = 0; // Silent at 45° down or more
+    } else if (pitch > 45) {
+        velocity = 127; // Max volume at 45° up or more
+    } else {
+        // Linear mapping between -45° and +45°
+        velocity = 127 * ((pitch + 45) / 90.0);
+    }
 
     // Debug Output
-    printFloat("%.1f ", printOutColor::printColorBlack, static_cast<float>(midiCents));
+    printFloat("%.1f ", printOutColor::printColorBlack, static_cast<float>(pitch));
     printFloat("%.1f\n", printOutColor::printColorBlack, static_cast<float>(velocity));
 }
 
@@ -54,6 +53,17 @@ void loop() {
     // If the event was SENSOR_DATA, process it
     if (last_event == FWGUI_EVENT_GUI_SENSOR_DATA) {
         processAccelData(event_data);
+    }
+
+    // Reset accelerometer on blue button press
+    if (last_event == FWGUI_EVENT_BLUE_BUTTON) {        
+        // Reset accelerometer values to default (neutral position)
+        uint8_t reset_data[6] = {0, 0, 0, 0, 0, 0}; // x = 0, y = 0, z = 1 (scaled)
+        reset_data[4] = 0x00; // z low byte
+        reset_data[5] = 0x40; // z high byte (scaled to 1g)
+
+        // Process the reset data
+        processAccelData(reset_data);
     }
 
     // Exit condition: red button pressed
