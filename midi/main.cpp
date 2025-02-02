@@ -67,7 +67,7 @@ void processAccelData(uint8_t *event_data) {
     bool should_send = false;
     
     // Always send if note changes
-    if (midi_note != last_midi_note) {
+    if (static_cast<int>(midi_note) != static_cast<int>(last_midi_note)){
         should_send = true;
     }
     // Only send volume updates if the change is significant
