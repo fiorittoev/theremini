@@ -1,6 +1,6 @@
 #include "fwwasm.h"
-#include <cmath>    // For atan2, sqrt, fabs
-#include <stdint.h> // For int types
+#include <math.h>    // For atan2, sqrt, fabs
+#include <stdint.h>  // For int types
 
 // MIDI Note and Channel
 #define MIDI_NOTE 60   // Middle C (C4)
@@ -10,6 +10,59 @@
 
 int8_t exitApp = 0;
 int currentOctave = 4; // Start at middle octave
+
+// Function to setup button menu text
+void setupButtonMenus() {
+    // Set menu text for grey and yellow buttons
+    setPanelMenuText(0, 0, "Octave Up");   // Grey button
+    setPanelMenuText(0, 1, "Octave Down"); // Yellow button
+    setPanelMenuText(0, 3, "Reset");       // Blue button
+    setPanelMenuText(0, 4, "Exit");        // Red button
+}
+
+void handleButtonEvent(int eventType, uint8_t buttonData) {
+    const char* buttonAction = getButtonData(buttonData);
+    
+    // Only process "clicked" events
+    if (strcmp(buttonAction, "clicked") == 0) {
+        switch(eventType) {
+            case FWGUI_EVENT_GRAY_BUTTON:
+                if (currentOctave < MAX_OCTAVE) {
+                    currentOctave++;
+                    printInt("Octave Up: ", printOutColor::printColorBlack, printOutDataType::printUInt32, currentOctave);
+                    printInt("\n", printOutColor::printColorBlack, printOutDataType::printUInt32, 0);
+                }
+                break;
+                
+            case FWGUI_EVENT_YELLOW_BUTTON:
+                if (currentOctave > MIN_OCTAVE) {
+                    currentOctave--;
+                    printInt("Octave Down: ", printOutColor::printColorBlack, printOutDataType::printUInt32, currentOctave);
+                    printInt("\n", printOutColor::printColorBlack, printOutDataType::printUInt32, 0);
+                }
+                break;
+
+            case FWGUI_EVENT_BLUE_BUTTON:
+                {
+                    // Reset accelerometer values to default
+                    uint8_t reset_data[6] = {0, 0, 0, 0, 0, 0};
+                    reset_data[4] = 0x00;
+                    reset_data[5] = 0x40;
+                    processAccelData(reset_data);
+                    currentOctave = 4; // Reset octave to middle
+                    printInt("Reset to default position and middle octave\n", 
+                            printOutColor::printColorBlack, 
+                            printOutDataType::printUInt32, 0);
+                }
+                break;
+
+            case FWGUI_EVENT_RED_BUTTON:
+                printInt("Exit...\n", printOutColor::printColorBlack, printOutDataType::printUInt32, 0);
+                exitApp = 1;
+                break;
+        }
+    }
+}
 
 void processAccelData(uint8_t *event_data) {
     int16_t iX, iY, iZ;
@@ -22,14 +75,14 @@ void processAccelData(uint8_t *event_data) {
     float x = static_cast<float>(iX) / scaleFactor;
     float y = static_cast<float>(iY) / scaleFactor;
     float z = static_cast<float>(iZ) / scaleFactor;
-
+    
     double roll = atan2(y, z) * 180.0 / M_PI;
     double pitch = atan2(-x, sqrt(y * y + z * z)) * 180.0 / M_PI;
    
     double midi_note = 0.0;
     double midi_volume = 0.0;
-
-    // Note calculation logic remains the same
+    
+    // Note calculation with octave offset
     if (roll < -90.0) {
         roll = -90.0;
         midi_note = 60.0;
@@ -54,11 +107,11 @@ void processAccelData(uint8_t *event_data) {
         roll = 90;
         midi_note = 72.0;
     }
-
+    
     // Apply octave offset
     midi_note = midi_note + ((currentOctave - 4) * 12);
     
-    // Volume calculation logic remains the same
+    // Volume calculation logic
     if (pitch < -30) {
         midi_volume = 127;
     } 
@@ -66,75 +119,48 @@ void processAccelData(uint8_t *event_data) {
         midi_volume = 0;
     } 
     else {
-  
-        midi_volume =  abs(pitch - 30)*2.116;
+        midi_volume = abs(pitch - 30) * 2.116;
     }
-
+    
     printFloat("%.1f ", printOutColor::printColorBlack, static_cast<float>(midi_note));
     printFloat("%.1f\n", printOutColor::printColorBlack, static_cast<float>(midi_volume));
-
 }
 
-// not "proper" loop check the note holding functions to play notes out
 void loop() {
     uint8_t event_data[FW_GET_EVENT_DATA_MAX] = {0};
     int last_event;
-
-    // Check if there is an event, and if so, get the data from it
+    
     last_event = 0;
-    //note changer here?
     if (hasEvent()) {
         last_event = getEventData(event_data);
-    }
-
-    // If the event was SENSOR_DATA, process it
-    // note changer here?
-    if (last_event == FWGUI_EVENT_GUI_SENSOR_DATA) {
-        processAccelData(event_data);
-    }
-
-    // Handle octave changes
-    else if (last_event == FWGUI_EVENT_GRAY_BUTTON) {
-        if (currentOctave < MAX_OCTAVE) {
-            currentOctave++;
-            printInt("Octave Up: ", printOutColor::printColorBlack, printOutDataType::printUInt32, currentOctave);
-            printInt("\n", printOutColor::printColorBlack, printOutDataType::printUInt32, 0);
+        
+        // Handle button events
+        if (last_event >= FWGUI_EVENT_GRAY_BUTTON && last_event <= FWGUI_EVENT_RED_BUTTON) {
+            handleButtonEvent(last_event, event_data[0]);
         }
-    }
-
-    else if (last_event == FWGUI_EVENT_YELLOW_BUTTON) {
-        if (currentOctave > MIN_OCTAVE) {
-            currentOctave--;
-            printInt("Octave Down: ", printOutColor::printColorBlack, printOutDataType::printUInt32, currentOctave);
-            printInt("\n", printOutColor::printColorBlack, printOutDataType::printUInt32, 0);
+        // Handle sensor data
+        else if (last_event == FWGUI_EVENT_GUI_SENSOR_DATA) {
+            processAccelData(event_data);
         }
-    }
-
-    // Reset accelerometer on blue button press
-    else if (last_event == FWGUI_EVENT_BLUE_BUTTON) {        
-        // Reset accelerometer values to default (neutral position)
-        uint8_t reset_data[6] = {0, 0, 0, 0, 0, 0}; // x = 0, y = 0, z = 1 (scaled)
-        reset_data[4] = 0x00; // z low byte
-        reset_data[5] = 0x40; // z high byte (scaled to 1g)
-
-        // Process the reset data
-        processAccelData(reset_data);
-    }
-
-    // Exit condition: red button pressed
-    if (last_event == FWGUI_EVENT_RED_BUTTON) {
-        printInt("Exit...\n", printOutColor::printColorBlack, printOutDataType::printUInt32, 0);
-        exitApp = 1;
     }
 }
 
 int main() {
-    //setup_panels();
+    // Initialize sensor settings
     setSensorSettings(1, 0, 10, 1, 0, 1, 0, 1, 0, 0, 0, 0, 0);
-    printInt("\nmain()\n", printOutColor::printColorBlack, printOutDataType::printUInt32, 0);
+    
+    // Setup button menus
+    setupButtonMenus();
+    
+    // Print startup message
+    printInt("\nFreeWili MIDI Controller Started\n", printOutColor::printColorBlack, printOutDataType::printUInt32, 0);
+    printInt("Current Octave: ", printOutColor::printColorBlack, printOutDataType::printUInt32, currentOctave);
+    printInt("\n", printOutColor::printColorBlack, printOutDataType::printUInt32, 0);
+    
+    // Main loop
     while (!exitApp) {
         loop();
-        waitms(1);  // Reduced wait time for more frequent updates, instead do the volume as a function to repaet
+        waitms(1);
     }
     
     return 0;
