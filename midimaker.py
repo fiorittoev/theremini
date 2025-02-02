@@ -125,45 +125,52 @@ class MidiController:
         try:
             with serial.Serial(self.serial_port, baudrate, timeout=timeout) as ser:
                 print(f"Connected to serial port: {self.serial_port}")
+                last_valid_midi = None
+                last_valid_velocity = None
+                VELOCITY_THRESHOLD = 5  # Minimum velocity change required to update
 
                 while self.powered:
                     try:
                         raw_data = ser.readline().decode("utf-8").strip()
                         if raw_data:
                             try:
-                                # Remove the '0134' or '134' prefix
+                                # Remove any prefixes and ANSI codes
                                 data = raw_data.replace("0134", "").replace("134", "")
-
-                                # Strip ANSI escape codes
                                 data = self.strip_ansi_codes(data)
 
                                 # Split the string on whitespace
                                 parts = data.split()
                                 if len(parts) >= 2:
-                                    pitch = float(parts[0])  # Pitch angle in degrees
-                                    volume = float(
-                                        parts[1]
-                                    )  # Raw volume (not used directly)
+                                    midi_value = int(float(parts[0]))  # MIDI note value
+                                    velocity = int(float(parts[1]))  # MIDI velocity
 
-                                    # Map pitch to volume (0.0 to 1.0)
-                                    if pitch < -45:
-                                        volume = 0.0  # Silent at 45° down or more
-                                    elif pitch > 45:
-                                        volume = 1.0  # Max volume at 45° up or more
-                                    else:
-                                        # Linear mapping between -45° and +45°
-                                        volume = (pitch + 45) / 90.0
+                                    # Ensure values are within MIDI ranges
+                                    midi_value = max(0, min(127, midi_value))
+                                    velocity = max(0, min(127, velocity))
 
-                                    # Update current volume
-                                    self.current_volume = volume
-                                    self.send_midi_messages()
+                                    should_send = False
+                                    
+                                    # Always send if note changes
+                                    if midi_value != last_valid_midi:
+                                        should_send = True
+                                    # Only send velocity updates if the change is significant
+                                    elif (last_valid_velocity is not None and 
+                                          abs(velocity - last_valid_velocity) >= VELOCITY_THRESHOLD):
+                                        should_send = True
 
-                                    # Debug output
-                                    print(f"Pitch: {pitch:.1f}°, Volume: {volume:.2f}")
-                                else:
-                                    print(
-                                        f"Invalid data format (not enough values): {raw_data}"
-                                    )
+                                    if should_send:
+                                        self.current_midi_value = midi_value
+                                        self.current_velocity = velocity
+                                        self.send_midi_messages()
+
+                                        # Update last valid values
+                                        last_valid_midi = midi_value
+                                        last_valid_velocity = velocity
+
+                                        # Debug output
+                                        print(
+                                            f"MIDI Note: {self.current_midi_value}, Velocity: {self.current_velocity}"
+                                        )
 
                             except ValueError as e:
                                 print(

@@ -9,6 +9,7 @@
 int8_t exitApp = 0;
 double last_midi_note = -1;  // Track the last note played
 double last_midi_volume = -1;  // Track the last volume
+const double VELOCITY_THRESHOLD = 5.0;  // Minimum velocity change required to send update
 
 void processAccelData(uint8_t *event_data) {
     int16_t iX, iY, iZ;
@@ -54,7 +55,7 @@ void processAccelData(uint8_t *event_data) {
         midi_note = 72.0;
     }
     
-    // Volume calculation logic remains the same
+    // Volume calculation with smoothing
     if (pitch < -30) {
         midi_volume = 127;
     } else if (pitch > 30) {
@@ -62,9 +63,20 @@ void processAccelData(uint8_t *event_data) {
     } else {
         midi_volume = 127 * ((pitch + 30) / 90.0);
     }
+
+    bool should_send = false;
+    
+    // Always send if note changes
+    if (midi_note != last_midi_note) {
+        should_send = true;
+    }
+    // Only send volume updates if the change is significant
+    else if (fabs(midi_volume - last_midi_volume) >= VELOCITY_THRESHOLD) {
+        should_send = true;
+    }
      
-    // Only print and send MIDI data if the note or volume has changed
-    if (midi_note != last_midi_note || midi_volume != last_midi_volume) {
+    // Only print and send MIDI data if we should
+    if (should_send) {
         printFloat("%.1f ", printOutColor::printColorBlack, static_cast<float>(midi_note));
         printFloat("%.1f\n", printOutColor::printColorBlack, static_cast<float>(midi_volume));
         
