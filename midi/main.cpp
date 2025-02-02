@@ -133,10 +133,28 @@ void loop() {
     last_event = 0;
     if (hasEvent()) {
         last_event = getEventData(event_data);
-        
-        // Handle button events
-        if (last_event >= FWGUI_EVENT_GRAY_BUTTON && last_event <= FWGUI_EVENT_RED_BUTTON) {
-            handleButtonEvent(last_event, event_data[0]);
+    }
+
+    // If the event was SENSOR_DATA, process it
+    // note changer here?
+    if (last_event == FWGUI_EVENT_GUI_SENSOR_DATA) {
+        processAccelData(event_data);
+    }
+
+    // Handle octave changes
+    else if (last_event == FWGUI_EVENT_GREY_BUTTON) {
+        if (currentOctave < MAX_OCTAVE) {
+            currentOctave++;
+            printInt("Octave Up: ", printOutColor::printColorBlack, printOutDataType::printUInt32, currentOctave);
+            printInt("\n", printOutColor::printColorBlack, printOutDataType::printUInt32, 0);
+        }
+    }
+
+    else if (last_event == FWGUI_EVENT_YELLOW_BUTTON) {
+        if (currentOctave > MIN_OCTAVE) {
+            currentOctave--;
+            printInt("Octave Down: ", printOutColor::printColorBlack, printOutDataType::printUInt32, currentOctave);
+            printInt("\n", printOutColor::printColorBlack, printOutDataType::printUInt32, 0);
         }
         // Handle sensor data
         else if (last_event == FWGUI_EVENT_GUI_SENSOR_DATA) {
