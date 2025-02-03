@@ -1,8 +1,6 @@
-# theremini
-Built for Spartahack X, Won best use of FREE-WiLi
-
 # thereMINI: A Wearable Theremin 🎶
 Turning motion into music with FREE-WILi
+Built for Spartahack X, Won best use of FREE-WiLi
 
 # Inspiration 🌟
 We designed this as an accessibility device for one-handed music creation but soon saw its broader potential. Inspired by conducting, we mapped hand motion to notes and volume, making music creation more intuitive and inclusive. We continue to design this as a accessible device, but it is for everyone!
