@@ -22,5 +22,5 @@ Our project focused on turning complex tasks into key milestones. A major achiev
 # What We Learned 📚
 We learned how to process real-time sensor data into MIDI signals, ensuring seamless hardware-software integration. Designing for accessibility taught us the importance of intuitive and ergonomic control. Optimizing MIDI implementation required refining pitch, velocity, and minimizing latency. Through iterative problem-solving, we debugged formatting errors and fine-tuned movement sensitivity.
 
-#🚀 What's Next for thereMINI
+# What's Next for thereMINI 🚀
 We plan to enhance thereMINI with scale mode, chord mode, and octave control, mapped to buttons on the FREE-WILi for seamless switching. A GUI will provide visual feedback and customization options. Beyond development, thereMINI has potential as an accessible instrument, an innovative tool for musicians, and an educational device for learning music through motion.
